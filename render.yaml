@@ -5,7 +5,7 @@ services:
   - type: web
     name: ai-jury-api
     runtime: node
-    plan: starter   # $7/mo, no sleep — required for the HeyGen poller
+    plan: starter
     region: frankfurt
     rootDir: backend
     buildCommand: npm install && npm run build
@@ -14,10 +14,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000   # Render injects $PORT but this is a sane default
       - key: CORS_ORIGIN
-        sync: false   # set after Netlify deploy gives you the URL
+        sync: false
       - key: MODERATOR_PASSWORD
         sync: false
       - key: ANTHROPIC_API_KEY
