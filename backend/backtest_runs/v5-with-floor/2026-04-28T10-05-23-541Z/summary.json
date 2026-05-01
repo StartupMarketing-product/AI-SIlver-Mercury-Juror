@@ -1,0 +1,69 @@
+{
+  "sampled": 1,
+  "completed": 30,
+  "errors": 0,
+  "exact_match": 4,
+  "exact_match_pct": 13.3,
+  "within1_band": 13,
+  "within1_band_pct": 43.3,
+  "by_class": {
+    "gold": 1
+  },
+  "per_block": {
+    "50": {
+      "n": 2,
+      "exact": 1,
+      "within1": 1
+    },
+    "51": {
+      "n": 1,
+      "exact": 0,
+      "within1": 1
+    },
+    "52": {
+      "n": 2,
+      "exact": 0,
+      "within1": 1
+    },
+    "53": {
+      "n": 7,
+      "exact": 1,
+      "within1": 3
+    },
+    "54": {
+      "n": 3,
+      "exact": 0,
+      "within1": 2
+    },
+    "55": {
+      "n": 4,
+      "exact": 0,
+      "within1": 2
+    },
+    "56": {
+      "n": 3,
+      "exact": 1,
+      "within1": 1
+    },
+    "57": {
+      "n": 2,
+      "exact": 0,
+      "within1": 0
+    },
+    "58": {
+      "n": 1,
+      "exact": 0,
+      "within1": 0
+    },
+    "60": {
+      "n": 3,
+      "exact": 1,
+      "within1": 1
+    },
+    "61": {
+      "n": 2,
+      "exact": 0,
+      "within1": 1
+    }
+  }
+}

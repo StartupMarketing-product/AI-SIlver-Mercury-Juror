@@ -1,0 +1,2137 @@
+{
+  "version": "2.0.0-xxvii",
+  "festival": "Silver Mercury",
+  "festival_edition": "XXVII",
+  "festival_year": 2025,
+  "regulation_ref": "Регламент Премии Silver Mercury XXVII (2025–2026)",
+  "description": "Полная методология оценки по регламенту XXVII премии: 12 блоков, 180 номинаций. Шкала 1–10, медальные пороги фиксированы. Социальные номинации оцениваются по дополнительному критерию Social outcomes.",
+  "scoring_scale": {
+    "min": 1,
+    "max": 10,
+    "increment": 0.1
+  },
+  "award_thresholds": {
+    "longlist": {
+      "min": 0.0,
+      "max": 2.99
+    },
+    "shortlist": {
+      "min": 3.0,
+      "max": 4.99
+    },
+    "bronze": {
+      "min": 5.0,
+      "max": 6.99
+    },
+    "silver": {
+      "min": 7.0,
+      "max": 8.99
+    },
+    "gold": {
+      "min": 9.0,
+      "max": 10.0
+    }
+  },
+  "social_formula": {
+    "description": "Для социально-ориентированных номинаций итог = среднее арифметическое (a) стандартного балла блока и (b) Social outcomes с весом 100%.",
+    "social_criterion": {
+      "id": "social_outcomes",
+      "name_en": "Social outcomes",
+      "name_ru": "Социальный результат",
+      "description_ru": "Изменения состояния, поведения, статуса благополучателей, произошедшие вследствие проекта. В отличие от охватов и маркетинговых метрик, это реальные последствия для целевой группы."
+    },
+    "social_criterion_weight": 1.0,
+    "combine": "arithmetic_mean"
+  },
+  "blocks": [
+    {
+      "id": "50",
+      "code": "A",
+      "name_en": "Industry Benchmark",
+      "name_ru": "Индустриальный бенчмарк",
+      "weight_mode": "fixed",
+      "criteria": [
+        {
+          "id": "challenge",
+          "name_en": "Challenge",
+          "name_ru": "Вызов",
+          "description_ru": "Глубина анализа контекста; ясность и амбициозность задачи; качество постановки KPI.",
+          "default_weight": 0.2
+        },
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Попадание в инсайт; логика и обоснованность стратегических выборов; связь с вызовом бизнеса.",
+          "default_weight": 0.25
+        },
+        {
+          "id": "idea",
+          "name_en": "Idea",
+          "name_ru": "Идея",
+          "description_ru": "Оригинальность решения; дифференциация в конкурентной среде; изящество и применимость идеи.",
+          "default_weight": 0.2
+        },
+        {
+          "id": "execution",
+          "name_en": "Execution",
+          "name_ru": "Реализация",
+          "description_ru": "Качество и достаточность реализации; соответствие стратегии; простота и масштабируемость.",
+          "default_weight": 0.2
+        },
+        {
+          "id": "results",
+          "name_en": "Results",
+          "name_ru": "Результаты",
+          "description_ru": "Достижение и верификация KPI; бизнес-эффект; устойчивость результата.",
+          "default_weight": 0.1
+        },
+        {
+          "id": "impact",
+          "name_en": "Impact",
+          "name_ru": "Влияние",
+          "description_ru": "Вклад в индустрию/категорию: новый стандарт, модель, практика; потенциал масштабирования.",
+          "default_weight": 0.05
+        }
+      ],
+      "nominations": [
+        {
+          "code": "A01",
+          "name_en": "FMCG",
+          "name_ru": "Товары повседневного спроса",
+          "is_social": false
+        },
+        {
+          "code": "A02",
+          "name_en": "PRIVATE LABEL",
+          "name_ru": "Собственные торговые марки",
+          "is_social": false
+        },
+        {
+          "code": "A03",
+          "name_en": "PETS CARE",
+          "name_ru": "Зоотовары и сервисы для животных",
+          "is_social": false
+        },
+        {
+          "code": "A04",
+          "name_en": "DARK MARKET",
+          "name_ru": "Дарк-маркет",
+          "is_social": false
+        },
+        {
+          "code": "A05",
+          "name_en": "PHARMACY & MEDICINE",
+          "name_ru": "Фармацевтика и медицина",
+          "is_social": false
+        },
+        {
+          "code": "A06",
+          "name_en": "HEALTHY LIFESTYLE & SPORT",
+          "name_ru": "ЗОЖ и спорт",
+          "is_social": false
+        },
+        {
+          "code": "A07",
+          "name_en": "TRANSPORT",
+          "name_ru": "Транспорт",
+          "is_social": false
+        },
+        {
+          "code": "A08",
+          "name_en": "RETAIL",
+          "name_ru": "Розничная торговля",
+          "is_social": false
+        },
+        {
+          "code": "A09",
+          "name_en": "E-COMMERCE",
+          "name_ru": "Электронная коммерция",
+          "is_social": false
+        },
+        {
+          "code": "A10",
+          "name_en": "LEISURE",
+          "name_ru": "Досуг",
+          "is_social": false
+        },
+        {
+          "code": "A11",
+          "name_en": "HORECA & TOURISM",
+          "name_ru": "Туризм и гостеприимство: отели, рестораны, кейтеринг",
+          "is_social": false
+        },
+        {
+          "code": "A12",
+          "name_en": "EDUCATION & EDTECH",
+          "name_ru": "Образование и образовательные технологии",
+          "is_social": false
+        },
+        {
+          "code": "A13",
+          "name_en": "BOOKMAKING & LOTTERIES",
+          "name_ru": "Букмекерство и лотереи",
+          "is_social": false
+        },
+        {
+          "code": "A14",
+          "name_en": "ESPORTS & GAMING",
+          "name_ru": "Киберспорт и гейминг",
+          "is_social": false
+        },
+        {
+          "code": "A15",
+          "name_en": "MEDIA & ENTERTAINMENT",
+          "name_ru": "Медиа и развлечения",
+          "is_social": false
+        },
+        {
+          "code": "A16",
+          "name_en": "FINANCIAL & INSURANCE SERVICES",
+          "name_ru": "Финансовые и страховые услуги",
+          "is_social": false
+        },
+        {
+          "code": "A17",
+          "name_en": "TELECOMMUNICATIONS & INTERNET",
+          "name_ru": "Телекоммуникации и интернет",
+          "is_social": false
+        },
+        {
+          "code": "A18",
+          "name_en": "TECHNOLOGY & INNOVATION",
+          "name_ru": "Технологии и инновации",
+          "is_social": false
+        },
+        {
+          "code": "A19",
+          "name_en": "TECHNOLOGY & ELECTRONICS",
+          "name_ru": "Потребительские технологии и электроника",
+          "is_social": false
+        },
+        {
+          "code": "A20",
+          "name_en": "BABY PRODUCTS & SERVICES & FOOD",
+          "name_ru": "Детские товары, услуги, питание",
+          "is_social": false
+        },
+        {
+          "code": "A21",
+          "name_en": "DEVELOPMENT & CONSTRUCTION",
+          "name_ru": "Недвижимость и строительство",
+          "is_social": false
+        },
+        {
+          "code": "A22",
+          "name_en": "INDUSTRY & ENERGY",
+          "name_ru": "Промышленность и энергетика",
+          "is_social": false
+        },
+        {
+          "code": "A23",
+          "name_en": "FASHION, STYLE & BEAUTY",
+          "name_ru": "Мода, стиль и красота",
+          "is_social": false
+        },
+        {
+          "code": "A24",
+          "name_en": "CULTURE & ART",
+          "name_ru": "Культура и искусство",
+          "is_social": false
+        },
+        {
+          "code": "A25",
+          "name_en": "PURPOSEFUL BUSINESS",
+          "name_ru": "Социально-ориентированный бизнес",
+          "is_social": true
+        },
+        {
+          "code": "A26",
+          "name_en": "NON-PROFIT",
+          "name_ru": "Некоммерческие организации",
+          "is_social": true
+        }
+      ]
+    },
+    {
+      "id": "51",
+      "code": "B",
+      "name_en": "Branding",
+      "name_ru": "Брендинг",
+      "weight_mode": "per_nomination",
+      "criteria": [
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Постановка задачи; анализ рынка/контекста/конкурентов/бизнеса; стратегические развилки и разрывы."
+        },
+        {
+          "id": "creativity",
+          "name_en": "Creativity",
+          "name_ru": "Креатив",
+          "description_ru": "Бренд-решение: полнота, обоснованность, логичность, изящность, сила бренда и потенциал."
+        },
+        {
+          "id": "execution",
+          "name_en": "Execution",
+          "name_ru": "Реализация",
+          "description_ru": "Разнообразие, качество и задействованность всех путей решения."
+        },
+        {
+          "id": "results",
+          "name_en": "Results",
+          "name_ru": "Результаты",
+          "description_ru": "Эффективность решения для задачи; бизнес/маркетинг/коммуникационные метрики."
+        }
+      ],
+      "nominations": [
+        {
+          "code": "B01",
+          "name_en": "BEST NEW B2C BRAND DEVELOPMENT FOR SERVICES",
+          "name_ru": "Лучший проект по разработке",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.3,
+            "execution": 0.4,
+            "results": 0.1
+          }
+        },
+        {
+          "code": "B02",
+          "name_en": "BEST NEW B2C BRAND DEVELOPMENT FOR PRODUCTS",
+          "name_ru": "Лучший проект по разработке",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.3,
+            "execution": 0.4,
+            "results": 0.1
+          }
+        },
+        {
+          "code": "B03",
+          "name_en": "BEST NEW B2B BRAND DEVELOPMENT",
+          "name_ru": "Лучший проект по разработке нового B2B бренда",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.3,
+            "execution": 0.4,
+            "results": 0.1
+          }
+        },
+        {
+          "code": "B04",
+          "name_en": "BEST REBRANDING OF B2C SERVICES",
+          "name_ru": "Лучший ребрендинг B2С услуг и сервисов",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.3,
+            "creativity": 0.4,
+            "execution": 0.2,
+            "results": 0.1
+          }
+        },
+        {
+          "code": "B05",
+          "name_en": "BEST REBRANDING OF B2C PRODUCTS",
+          "name_ru": "Лучший ребрендинг B2С продуктов",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.3,
+            "creativity": 0.4,
+            "execution": 0.2,
+            "results": 0.1
+          }
+        },
+        {
+          "code": "B06",
+          "name_en": "BEST B2B REBRANDING",
+          "name_ru": "Лучший B2B ребрендинг",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.3,
+            "creativity": 0.4,
+            "execution": 0.2,
+            "results": 0.1
+          }
+        },
+        {
+          "code": "B07",
+          "name_en": "BEST EMPLOYER BRANDING",
+          "name_ru": "Лучший брендинг работодателя",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.3,
+            "execution": 0.4,
+            "results": 0.1
+          }
+        },
+        {
+          "code": "B08",
+          "name_en": "BREAKTHROUGH BRAND",
+          "name_ru": "Прорывной бренд",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.4,
+            "execution": 0.3,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "B09",
+          "name_en": "PERSONAL & FOUNDER FACE BRAND",
+          "name_ru": "Личный бренд и бренд с высоким",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.2,
+            "execution": 0.5,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "B10",
+          "name_en": "BEST PRODUCT LINE BRANDING",
+          "name_ru": "Лучший брендинг продуктовой линейки",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.2,
+            "execution": 0.4,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "B11",
+          "name_en": "BEST CROSS-CATEGORY & ECOSYSTEM BRANDS & SUBBRANDING",
+          "name_ru": "Лучшие",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.2,
+            "execution": 0.5,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "B12",
+          "name_en": "BEST PRIVATE LABEL",
+          "name_ru": "Лучшая собственная торговая марка",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.2,
+            "execution": 0.4,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "B13",
+          "name_en": "BEST CRAFT OF VISUAL BRAND COMMUNICATION",
+          "name_ru": "Лучшее мастерство визуальной",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.3,
+            "execution": 0.5,
+            "results": 0.1
+          }
+        },
+        {
+          "code": "B14",
+          "name_en": "BEST CRAFT OF VERBAL BRAND IDENTIFICATION",
+          "name_ru": "Лучшее мастерство вербальной",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.7,
+            "results": 0.1,
+            "execution": 0.0
+          }
+        },
+        {
+          "code": "B15",
+          "name_en": "BEST LOCAL & TERRITORY BRANDING",
+          "name_ru": "Лучшее создание бренда, учитывающего",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.2,
+            "execution": 0.5,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "B16",
+          "name_en": "BEST PURPOSEFUL BRAND",
+          "name_ru": "Лучший общественно значимый бренд",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.2,
+            "execution": 0.5,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "B17",
+          "name_en": "BEST NON-PROFIT BRAND",
+          "name_ru": "Лучший бренд некоммерческой организации",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.2,
+            "execution": 0.5,
+            "results": 0.2
+          }
+        }
+      ]
+    },
+    {
+      "id": "52",
+      "code": "C",
+      "name_en": "Creativity",
+      "name_ru": "Креатив",
+      "weight_mode": "fixed",
+      "criteria": [
+        {
+          "id": "idea_freshness",
+          "name_en": "Idea freshness",
+          "name_ru": "Новизна идеи",
+          "description_ru": "Нестандартность и сила креативного решения; оригинальность ответа на инсайт; способность выделяться в категории.",
+          "default_weight": 0.7
+        },
+        {
+          "id": "results",
+          "name_en": "Results",
+          "name_ru": "Результаты",
+          "description_ru": "Насколько эффективно креативное решение помогло достичь целей проекта.",
+          "default_weight": 0.3
+        }
+      ],
+      "nominations": [
+        {
+          "code": "C01",
+          "name_en": "BEST INNOVATIVE CAMPAIGN",
+          "name_ru": "Лучшая инновационная кампания",
+          "is_social": false
+        },
+        {
+          "code": "C02",
+          "name_en": "BEST CREATIVE CAMPAIGN",
+          "name_ru": "Лучшая креативная кампания",
+          "is_social": false
+        },
+        {
+          "code": "C03",
+          "name_en": "BEST INTEGRATED CREATIVE CAMPAIGN",
+          "name_ru": "Лучшая интегрированная креативная кампания",
+          "is_social": false
+        },
+        {
+          "code": "C04",
+          "name_en": "REAL TIME CREATIVE CAMPAIGN",
+          "name_ru": "Ситуативная креативная кампания",
+          "is_social": false
+        },
+        {
+          "code": "C05",
+          "name_en": "CREATIVE BREAKTHROUGH ON A BUDGET",
+          "name_ru": "Креативный прорыв малобюджетного проекта",
+          "is_social": false
+        },
+        {
+          "code": "C06",
+          "name_en": "BEST CREATIVE TV",
+          "name_ru": "OLV VIDEO / Лучшее креативное TV/OLV видео",
+          "is_social": false
+        },
+        {
+          "code": "C07",
+          "name_en": "BEST LONG-FORM VIDEO",
+          "name_ru": "Лучшее продолжительное видео",
+          "is_social": false
+        },
+        {
+          "code": "C08",
+          "name_en": "BRANDED CONTENT & ENTERTAINMENT",
+          "name_ru": "Брендированный контент и развлечения",
+          "is_social": false
+        },
+        {
+          "code": "C09",
+          "name_en": "BEST CREATIVE AUDIO CONTENT",
+          "name_ru": "Лучший креативный аудиоконтент",
+          "is_social": false
+        },
+        {
+          "code": "C10",
+          "name_en": "BEST CREATIVE INDOOR & OUTDOOR",
+          "name_ru": "Лучшая креативная наружная и внутренняя реклама",
+          "is_social": false
+        },
+        {
+          "code": "C11",
+          "name_en": "BEST CREATIVE DOOH",
+          "name_ru": "Лучшая креативная цифровая наружная реклама",
+          "is_social": false
+        },
+        {
+          "code": "C12",
+          "name_en": "BEST AMBIENT INDOOR & OUTDOOR",
+          "name_ru": "Лучшая нестандартная наружная и внутренняя",
+          "is_social": false
+        },
+        {
+          "code": "C13",
+          "name_en": "BEST CREATIVE USE OF AI",
+          "name_ru": "Лучшее креативное использование ИИ",
+          "is_social": false
+        },
+        {
+          "code": "C14",
+          "name_en": "BEST PURPOSEFUL CREATIVE CAMPAIGN",
+          "name_ru": "Лучшая общественно значимая креативная",
+          "is_social": true
+        },
+        {
+          "code": "C15",
+          "name_en": "BEST CREATIVE CAMPAIGN FOR NON-PROFIT",
+          "name_ru": "Лучшая креативная кампания для",
+          "is_social": true
+        }
+      ]
+    },
+    {
+      "id": "53",
+      "code": "D",
+      "name_en": "Digital",
+      "name_ru": "Диджитал",
+      "weight_mode": "per_nomination",
+      "criteria": [
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Глубина понимания задачи и контекста; четкость цели, релевантность вызова, проработка инсайта."
+        },
+        {
+          "id": "idea",
+          "name_en": "Idea",
+          "name_ru": "Идея",
+          "description_ru": "Оригинальность и сила идеи, связь с инсайтом; способность трансформировать восприятие или поведение."
+        },
+        {
+          "id": "execution",
+          "name_en": "Execution",
+          "name_ru": "Реализация",
+          "description_ru": "Качество воплощения: выбор инструментов, новизна, технологическое исполнение и креатив."
+        },
+        {
+          "id": "results",
+          "name_en": "Results",
+          "name_ru": "Результаты",
+          "description_ru": "Влияние и эффективность: бизнес-результаты, влияние на бренд/поведение, вклад в индустрию."
+        }
+      ],
+      "nominations": [
+        {
+          "code": "D01",
+          "name_en": "BEST DIGITAL CAMPAIGN",
+          "name_ru": "Лучшая цифровая кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.2,
+            "execution": 0.3,
+            "results": 0.3
+          }
+        },
+        {
+          "code": "D02",
+          "name_en": "BEST PERFORMANCE CAMPAIGN",
+          "name_ru": "Лучшая перформанс-кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.1,
+            "execution": 0.3,
+            "results": 0.4
+          }
+        },
+        {
+          "code": "D03",
+          "name_en": "BEST MOBILE CAMPAIGN",
+          "name_ru": "Лучшая мобильная кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.15,
+            "execution": 0.25,
+            "results": 0.4
+          }
+        },
+        {
+          "code": "D04",
+          "name_en": "BEST BRANDFORMANCE CAMPAIGN",
+          "name_ru": "Лучшая брендформанс-кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.2,
+            "execution": 0.3,
+            "results": 0.3
+          }
+        },
+        {
+          "code": "D05",
+          "name_en": "BEST CAMPAIGN IN RETAIL MEDIA",
+          "name_ru": "Лучшая кампания в ритейл-медиа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.2,
+            "execution": 0.2,
+            "results": 0.4
+          }
+        },
+        {
+          "code": "D06",
+          "name_en": "BEST INFLUENCERS CAMPAIGN",
+          "name_ru": "Лучшая инфлюенс-кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.15,
+            "idea": 0.3,
+            "execution": 0.25,
+            "results": 0.3
+          }
+        },
+        {
+          "code": "D07",
+          "name_en": "BEST SPECIAL DIGITAL PROJECT",
+          "name_ru": "Лучший диджитал-спецпроект",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.3,
+            "execution": 0.3,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "D08",
+          "name_en": "BEST SOCIAL MEDIA BRAND",
+          "name_ru": "Лучший бренд в социальных медиа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.25,
+            "execution": 0.3,
+            "results": 0.25
+          }
+        },
+        {
+          "code": "D09",
+          "name_en": "BEST SOCIAL MEDIA CAMPAIGN",
+          "name_ru": "Лучшая кампания в социальных медиа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.2,
+            "execution": 0.2,
+            "results": 0.4
+          }
+        },
+        {
+          "code": "D10",
+          "name_en": "BEST USE OF AI",
+          "name_ru": "Лучшее использование ИИ",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.3,
+            "execution": 0.3,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "D11",
+          "name_en": "BEST GAMIFICATION",
+          "name_ru": "Лучшая геймификация",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.3,
+            "execution": 0.3,
+            "results": 0.2
+          }
+        },
+        {
+          "code": "D12",
+          "name_en": "BEST CVM & LOYALTY",
+          "name_ru": "Лучший проект по работе с клиентами и лояльностью",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.2,
+            "execution": 0.2,
+            "results": 0.4
+          }
+        },
+        {
+          "code": "D13",
+          "name_en": "BEST USE OF DATA",
+          "name_ru": "Лучшее использование данных",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.2,
+            "execution": 0.3,
+            "results": 0.3
+          }
+        },
+        {
+          "code": "D14",
+          "name_en": "BEST BRAND ON MARKETPLACE",
+          "name_ru": "Лучший бренд на маркетплейсе",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.2,
+            "execution": 0.2,
+            "results": 0.4
+          }
+        },
+        {
+          "code": "D15",
+          "name_en": "BEST DIGITAL PLATFORM",
+          "name_ru": "Лучшая цифровая платформа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.2,
+            "execution": 0.3,
+            "results": 0.3
+          }
+        },
+        {
+          "code": "D16",
+          "name_en": "BEST OF E-COMMERCE",
+          "name_ru": "Лучший проект в электронной коммерции",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.3,
+            "idea": 0.1,
+            "execution": 0.2,
+            "results": 0.4
+          }
+        },
+        {
+          "code": "D17",
+          "name_en": "BEST            OMNICHANNEL        BRAND      EXPERIENCE",
+          "name_ru": "Лучший",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "idea": 0.2,
+            "execution": 0.4,
+            "results": 0.3
+          }
+        },
+        {
+          "code": "D18",
+          "name_en": "BEST PURPOSE-DRIVEN DIGITAL CAMPAIGN",
+          "name_ru": "Лучшая цифровая кампания с общественно",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.2,
+            "idea": 0.4,
+            "execution": 0.2,
+            "results": 0.2
+          }
+        }
+      ]
+    },
+    {
+      "id": "54",
+      "code": "E",
+      "name_en": "PR",
+      "name_ru": "PR",
+      "weight_mode": "per_nomination",
+      "criteria": [
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Системный подход к планированию PR-кампании; выбор каналов, контента; понимание ЦА и инфополя."
+        },
+        {
+          "id": "creativity",
+          "name_en": "Creativity",
+          "name_ru": "Креатив",
+          "description_ru": "Принципиально новые идеи и подходы; tone of voice бренда; точное понимание инсайтов ЦА."
+        },
+        {
+          "id": "execution",
+          "name_en": "Execution",
+          "name_ru": "Реализация",
+          "description_ru": "Качество воплощения; владение PR-инструментами; работа с кризисами; адаптация контента."
+        },
+        {
+          "id": "effectiveness_results",
+          "name_en": "Effectiveness & Results",
+          "name_ru": "Эффективность и результаты",
+          "description_ru": "Соответствие результатов целям; цифровое подтверждение защиты/изменения/укрепления репутации и узнаваемости."
+        }
+      ],
+      "nominations": [
+        {
+          "code": "E01",
+          "name_en": "BEST B2C PR CAMPAIGN",
+          "name_ru": "Лучшая B2C PR кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E02",
+          "name_en": "BEST B2B",
+          "name_ru": "B2G PR CAMPAIGN / Лучшая B2B/B2G PR кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E03",
+          "name_en": "BEST LOW-BUDGET PR CAMPAIGN",
+          "name_ru": "Лучшая малобюджетная PR кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E04",
+          "name_en": "INTERNATIONAL COMMUNICATIONS",
+          "name_ru": "Международные коммуникации",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E05",
+          "name_en": "TERRITORIAL PR",
+          "name_ru": "Продвижение территорий",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E06",
+          "name_en": "BEST USE OF PR TOOLS FOR REPUTATION & IMAGE",
+          "name_ru": "Лучшее использование инструментов",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E07",
+          "name_en": "BEST USE OF PR TOOLS FOR PERSONAL BRAND",
+          "name_ru": "Лучшее использование инструментов PR",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E08",
+          "name_en": "BEST PR CAMPAIGN WITH NON-STANDARD TOOLS",
+          "name_ru": "Лучшая PR-кампания с использованием",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E09",
+          "name_en": "BEST USE OF ANTI-CRISIS PR",
+          "name_ru": "Лучшее использование PR в кризисной ситуации",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E10",
+          "name_en": "BEST ESG",
+          "name_ru": "CSR/SUSTAINABLE DEVELOPMENT PR CAMPAIGN / Лучшая PR кампания в",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E11",
+          "name_en": "BEST PURPOSEFUL PR CAMPAIGN",
+          "name_ru": "Лучшая общественно значимая PR-кампания",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E12",
+          "name_en": "BEST PR CAMPAIGN FOR NON-PROFIT",
+          "name_ru": "Лучшая PR кампания для некоммерческой",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E13",
+          "name_en": "BEST RESEARCH IN COMMUNICATIONS",
+          "name_ru": "Лучшее исследование в области коммуникаций",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.3,
+            "execution": 0.2,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "E14",
+          "name_en": "EDUCATIONAL PR",
+          "name_ru": "Просветительский PR",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E15",
+          "name_en": "BEST PR CAMPAIGN WITH AI",
+          "name_ru": "Лучшая PR-кампания с применением ИИ",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        },
+        {
+          "code": "E16",
+          "name_en": "BEST STATE-SUPPORTED PROJECT",
+          "name_ru": "Лучший проект при поддержке государства",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.25
+          }
+        }
+      ]
+    },
+    {
+      "id": "55",
+      "code": "F",
+      "name_en": "Marketing",
+      "name_ru": "Маркетинг",
+      "weight_mode": "per_nomination",
+      "criteria": [
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Ясность и амбициозность задач; анализ рынка/конкурентов/аудитории; ключевые метрики успеха."
+        },
+        {
+          "id": "innovation_creativity",
+          "name_en": "Innovation & Creativity",
+          "name_ru": "Новаторство и креатив",
+          "description_ru": "Оригинальность и новизна подхода; релевантность целям кампании."
+        },
+        {
+          "id": "execution_craft",
+          "name_en": "Execution & Craft",
+          "name_ru": "Реализация и мастерство",
+          "description_ru": "Качество и комплексность исполнения; медиамикс; согласованность всех точек контакта."
+        },
+        {
+          "id": "effectiveness_results",
+          "name_en": "Effectiveness & Results",
+          "name_ru": "Эффективность и результаты",
+          "description_ru": "Подтвержденный эффект; влияние на ключевые бизнес/маркетинг-показатели; достижение KPI и ROI."
+        }
+      ],
+      "nominations": [
+        {
+          "code": "F01",
+          "name_en": "BEST INTEGRATED MARKETING CAMPAIGN",
+          "name_ru": "Лучшая интегрированная маркетинговая",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F02",
+          "name_en": "BEST B2B LOYALTY & ENGAGEMENT PROGRAM",
+          "name_ru": "Лучшая B2B программа лояльности и",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.15,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.25,
+            "effectiveness_results": 0.4
+          }
+        },
+        {
+          "code": "F03",
+          "name_en": "BEST B2C LOYALTY & ENGAGEMENT PROGRAM",
+          "name_ru": "Лучшая программа лояльности и",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.15,
+            "innovation_creativity": 0.15,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.4
+          }
+        },
+        {
+          "code": "F04",
+          "name_en": "BEST B2B MARKETING CAMPAIGN",
+          "name_ru": "Лучшая B2B маркетинговая кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.4
+          }
+        },
+        {
+          "code": "F05",
+          "name_en": "SEASONAL MARKETING",
+          "name_ru": "Сезонный маркетинг",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F06",
+          "name_en": "BEST EXPERIENTIAL MARKETING CAMPAIGN",
+          "name_ru": "Лучшая кампания с использованием",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F07",
+          "name_en": "BEST SALES PROMO CAMPAIGN",
+          "name_ru": "Лучшая кампания по стимулированию сбыта",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "innovation_creativity": 0.25,
+            "execution_craft": 0.25,
+            "effectiveness_results": 0.4
+          }
+        },
+        {
+          "code": "F08",
+          "name_en": "BEST USE OF PRINT, OUTDOOR, INDOOR & AMBIENT",
+          "name_ru": "Лучшее использование печатной,",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "F09",
+          "name_en": "BEST USE OF DIRECT & CRM MARKETING TOOLS",
+          "name_ru": "Лучшее использование инструментов",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.2,
+            "effectiveness_results": 0.4
+          }
+        },
+        {
+          "code": "F10",
+          "name_en": "COMMUNITY-DRIVEN MARKETING",
+          "name_ru": "Маркетинг сообществ",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F11",
+          "name_en": "BEST USE OF SOCIAL MEDIA",
+          "name_ru": "Лучшее использование социальных медиа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.3,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "F12",
+          "name_en": "BEST USE OF OPINION LEADERS",
+          "name_ru": "Лучшая интеграция лидеров мнений",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F13",
+          "name_en": "OPINION LEADERS-DRIVEN COLLABORATION",
+          "name_ru": "Коллаборация с лидерами мнений",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "F14",
+          "name_en": "BEST COLLABORATION",
+          "name_ru": "Лучшая коллаборация",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F15",
+          "name_en": "BEST SPONSORSHIP",
+          "name_ru": "Лучшее спонсорство",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F16",
+          "name_en": "REAL TIME MARKETING CAMPAIGN",
+          "name_ru": "Ситуативная маркетинговая кампания",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "F17",
+          "name_en": "VIRAL MARKETING",
+          "name_ru": "Виральный маркетинг",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F18",
+          "name_en": "MARKETING FOR PREMIUM SEGMENT",
+          "name_ru": "Маркетинг для премиального сегмента",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F19",
+          "name_en": "BEST PURPOSEFUL            MARKETING      CAMPAIGN",
+          "name_ru": "Лучшая    общественно      значимая",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F20",
+          "name_en": "BEST MARKETING CAMPAIGN FOR NON-PROFIT",
+          "name_ru": "Лучшая маркетинговая кампания для",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "F21",
+          "name_en": "BEST UNCONVENTIONAL MARKETING CAMPAIGN",
+          "name_ru": "Лучшая нестандартная маркетинговая",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.2,
+            "effectiveness_results": 0.3
+          }
+        }
+      ]
+    },
+    {
+      "id": "56",
+      "code": "G",
+      "name_en": "Media Production",
+      "name_ru": "Медиапродакшн",
+      "weight_mode": "per_nomination",
+      "criteria": [
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Соответствие проекта стратегии бренда и инсайтам ЦА; грамотное планирование."
+        },
+        {
+          "id": "innovation_creativity",
+          "name_en": "Innovation & Creativity",
+          "name_ru": "Новаторство и креатив",
+          "description_ru": "Создание новых идей в рамках концепции; восприятие концепции с точки зрения ЦА."
+        },
+        {
+          "id": "execution_craft",
+          "name_en": "Execution & Craft",
+          "name_ru": "Реализация и мастерство",
+          "description_ru": "Качество и точность реализации; сложность инструментов; обеспечение запланированной реакции ЦА."
+        },
+        {
+          "id": "effectiveness_results",
+          "name_en": "Effectiveness & Results",
+          "name_ru": "Эффективность и результаты",
+          "description_ru": "Бизнес-эффективность; соответствие результатов задачам и масштабу; успешность согласно стратегии."
+        }
+      ],
+      "nominations": [
+        {
+          "code": "G01",
+          "name_en": "BEST B2C BRAND MEDIA",
+          "name_ru": "Лучшие B2C бренд медиа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.4,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "G02",
+          "name_en": "BRANDED CONTENT IN LEGACY MEDIA",
+          "name_ru": "Брендированный контент в классических медиа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "G03",
+          "name_en": "BRANDED CONTENT IN DIGITAL MEDIA",
+          "name_ru": "Брендированный контент в цифровых медиа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "G04",
+          "name_en": "BRANDED CONTENT IN SMM",
+          "name_ru": "Брендированный контент в SMM",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "G05",
+          "name_en": "BEST USE OF E-COMMERCE OR RETAIL MEDIA CHANNELS",
+          "name_ru": "Лучшее использование каналов",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "G06",
+          "name_en": "BRANDED CONTENT IN VIRTUAL ENVIRONMENT",
+          "name_ru": "Брендированный контент в виртуальных",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.15,
+            "innovation_creativity": 0.3,
+            "execution_craft": 0.4,
+            "effectiveness_results": 0.15
+          }
+        },
+        {
+          "code": "G07",
+          "name_en": "BRANDED CONTENT IN OMNICHANNEL COMMUNICATIONS",
+          "name_ru": "Брендированный контент в",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.4,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "G08",
+          "name_en": "BEST SOCIALLY SIGNIFICANT CONTENT",
+          "name_ru": "Лучший общественно значимый контент",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.1,
+            "innovation_creativity": 0.2,
+            "execution_craft": 0.4,
+            "effectiveness_results": 0.3
+          }
+        }
+      ]
+    },
+    {
+      "id": "57",
+      "code": "H",
+      "name_en": "Strategy Breakthrough",
+      "name_ru": "Стратегический прорыв",
+      "weight_mode": "fixed",
+      "criteria": [
+        {
+          "id": "challenge",
+          "name_en": "Challenge",
+          "name_ru": "Стратегический вызов",
+          "description_ru": "Амбициозность задачи; рефлексия стратегии вокруг бизнес-задачи; анализ контекста.",
+          "default_weight": 0.2
+        },
+        {
+          "id": "strategic_solution",
+          "name_en": "Strategic solution",
+          "name_ru": "Стратегическое решение",
+          "description_ru": "Проработка инсайта; изящность и оригинальность решения в конкурентном поле.",
+          "default_weight": 0.3
+        },
+        {
+          "id": "execution",
+          "name_en": "Execution",
+          "name_ru": "Реализация",
+          "description_ru": "Реализация стратегической идеи; простота и достаточность; соответствие стратегии.",
+          "default_weight": 0.2
+        },
+        {
+          "id": "results",
+          "name_en": "Results",
+          "name_ru": "Результаты",
+          "description_ru": "Насколько идея и реализация решили задачу бизнеса; бизнес-метрики (или медийные, если вызов медийный).",
+          "default_weight": 0.3
+        }
+      ],
+      "nominations": [
+        {
+          "code": "H01",
+          "name_en": "BEST STRATEGY",
+          "name_ru": "Лучшая стратегия",
+          "is_social": false
+        },
+        {
+          "code": "H02",
+          "name_en": "NEW FRONTIERS",
+          "name_ru": "Новые горизонты",
+          "is_social": false
+        },
+        {
+          "code": "H03",
+          "name_en": "SKYROCKET GROWTH",
+          "name_ru": "Стремительный рост бизнеса",
+          "is_social": false
+        },
+        {
+          "code": "H04",
+          "name_en": "BUSINESS TRANSFORMATION",
+          "name_ru": "Трансформация бизнеса",
+          "is_social": false
+        },
+        {
+          "code": "H05",
+          "name_en": "SUSTAINABLE INCREASE OF BUSINESS",
+          "name_ru": "Устойчивый рост бизнеса",
+          "is_social": false
+        },
+        {
+          "code": "H06",
+          "name_en": "LOCAL INSIGHT STRATEGY",
+          "name_ru": "Стратегия, базирующаяся на глубоком понимании",
+          "is_social": false
+        },
+        {
+          "code": "H07",
+          "name_en": "BEST PRODUCT REBIRTH OR RELAUNCH CAMPAIGN",
+          "name_ru": "Лучшая кампания по возрождению /",
+          "is_social": false
+        },
+        {
+          "code": "H08",
+          "name_en": "COMPETITIVE STRATEGY",
+          "name_ru": "Конкурентная стратегия",
+          "is_social": false
+        },
+        {
+          "code": "H09",
+          "name_en": "ACHIEVING GROWTH IN FLAT MARKET",
+          "name_ru": "Рост в условиях стагнирующего рынка",
+          "is_social": false
+        },
+        {
+          "code": "H10",
+          "name_en": "PURPOSEFUL STRATEGY",
+          "name_ru": "Общественно значимая стратегия",
+          "is_social": true
+        }
+      ]
+    },
+    {
+      "id": "58",
+      "code": "I",
+      "name_en": "Branding Products",
+      "name_ru": "Бренд-продукты",
+      "weight_mode": "fixed",
+      "criteria": [
+        {
+          "id": "strategy_challenge",
+          "name_en": "Strategy & Challenge",
+          "name_ru": "Стратегия и вызов",
+          "description_ru": "Ясность задачи: бизнес/коммуникационная цель продукта; ценности бренда; ЦА; контекст.",
+          "default_weight": 0.15
+        },
+        {
+          "id": "big_idea",
+          "name_en": "Big Idea",
+          "name_ru": "Большая идея",
+          "description_ru": "Сила и оригинальность концепции бренд-продукта; эмоциональная связь с ЦА.",
+          "default_weight": 0.25
+        },
+        {
+          "id": "execution_craft",
+          "name_en": "Execution & Craft",
+          "name_ru": "Реализация и мастерство",
+          "description_ru": "Дизайн, качество, материалы, технологии, инновации (например, эко или AI).",
+          "default_weight": 0.25
+        },
+        {
+          "id": "campaign_communication",
+          "name_en": "Campaign & Communication",
+          "name_ru": "Кампания и коммуникация",
+          "description_ru": "Синергия продукта и кампании; присутствие в медиапространстве; дополнительная ценность для бренда.",
+          "default_weight": 0.15
+        },
+        {
+          "id": "results",
+          "name_en": "Results",
+          "name_ru": "Результаты",
+          "description_ru": "Продажи, вовлеченность, рост узнаваемости и лояльности; долгосрочный/коллекционный эффект.",
+          "default_weight": 0.2
+        }
+      ],
+      "nominations": [
+        {
+          "code": "I01",
+          "name_en": "BEST EVENT MERCH",
+          "name_ru": "Лучший событийный мерч",
+          "is_social": false
+        },
+        {
+          "code": "I02",
+          "name_en": "BEST CORPORATE & HR MERCH",
+          "name_ru": "Лучшие корпоративные подарки и HR-мерч",
+          "is_social": false
+        },
+        {
+          "code": "I03",
+          "name_en": "BEST MERCH FOR OPINION LEADERS",
+          "name_ru": "Лучший мерч для лидеров мнений",
+          "is_social": false
+        },
+        {
+          "code": "I04",
+          "name_en": "BEST SALES & TRADE MERCH",
+          "name_ru": "Лучший мерч для стимулирования продаж и",
+          "is_social": false
+        },
+        {
+          "code": "I05",
+          "name_en": "BEST LIMITED EDITIONS & DROPS",
+          "name_ru": "Лучшие лимитированные коллекции и дропы",
+          "is_social": false
+        },
+        {
+          "code": "I06",
+          "name_en": "BEST COLLABS & SPECIAL PROJECTS",
+          "name_ru": "Лучшие коллаборации и спецпроекты",
+          "is_social": false
+        }
+      ]
+    },
+    {
+      "id": "59",
+      "code": "J",
+      "name_en": "Comprehensively Implemented Campaigns",
+      "name_ru": "Комплексно реализованные кампании",
+      "weight_mode": "fixed",
+      "criteria": [
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Ясность маркетинговых задач; рыночный контекст; инсайт ЦА; коммуникационное сообщение.",
+          "default_weight": 0.2
+        },
+        {
+          "id": "idea",
+          "name_en": "Idea",
+          "name_ru": "Идея",
+          "description_ru": "Оригинальность и выразительность креативной идеи; глубина и соответствие стратегии.",
+          "default_weight": 0.2
+        },
+        {
+          "id": "execution_craft",
+          "name_en": "Execution & Craft",
+          "name_ru": "Реализация и мастерство",
+          "description_ru": "Мастерство исполнения и согласованность всех элементов кампании.",
+          "default_weight": 0.4
+        },
+        {
+          "id": "results",
+          "name_en": "Results",
+          "name_ru": "Результаты",
+          "description_ru": "Подтвержденная эффективность: достижение бизнес/коммуникационных целей и задач.",
+          "default_weight": 0.2
+        }
+      ],
+      "nominations": [
+        {
+          "code": "J01",
+          "name_en": "BEST ADVERTISING CAMPAIGN",
+          "name_ru": "Лучшая рекламная кампания",
+          "is_social": false
+        },
+        {
+          "code": "J02",
+          "name_en": "SEASONAL ADVERTISING CAMPAIGN",
+          "name_ru": "Сезонная рекламная кампания",
+          "is_social": false
+        },
+        {
+          "code": "J03",
+          "name_en": "BEST SMART LIMITS CAMPAIGN",
+          "name_ru": "Лучшая кампания при ограниченных ресурсах и/или",
+          "is_social": false
+        },
+        {
+          "code": "J04",
+          "name_en": "BEST TV",
+          "name_ru": "OLV ADVERTISING VIDEO / Лучший рекламный ролик",
+          "is_social": false
+        },
+        {
+          "code": "J05",
+          "name_en": "BEST VERTICAL VIDEO",
+          "name_ru": "Лучшее вертикальное видео",
+          "is_social": false
+        },
+        {
+          "code": "J06",
+          "name_en": "BEST SERIES OF COMMERCIALS",
+          "name_ru": "Лучшая рекламная серия",
+          "is_social": false
+        },
+        {
+          "code": "J07",
+          "name_en": "BEST CRAFT OF BRANDED CONTENT & ENTERTAINMENT",
+          "name_ru": "Брендированный контент и",
+          "is_social": false
+        },
+        {
+          "code": "J08",
+          "name_en": "BEST ADVERTISING AUDIO CONTENT",
+          "name_ru": "Лучший рекламный аудиоконтент",
+          "is_social": false
+        },
+        {
+          "code": "J09",
+          "name_en": "BEST CRAFT OF PRINT, OUTDOOR, INDOOR & AMBIENT",
+          "name_ru": "Мастерство исполнения печатной,",
+          "is_social": false
+        },
+        {
+          "code": "J10",
+          "name_en": "BEST CONTENT FOR LEARNING & EXPLAINING",
+          "name_ru": "Лучший контент для обучения и",
+          "is_social": false
+        },
+        {
+          "code": "J11",
+          "name_en": "EFFECTIVE HUMOR",
+          "name_ru": "Эффективный юмор",
+          "is_social": false
+        },
+        {
+          "code": "J12",
+          "name_en": "BEST PRODUCT PLACEMENT",
+          "name_ru": "Лучшая интеграция бренда",
+          "is_social": false
+        },
+        {
+          "code": "J13",
+          "name_en": "BEST CO-CREATION & UGC",
+          "name_ru": "Лучшая кампания с участием аудитории в создании контента",
+          "is_social": false
+        },
+        {
+          "code": "J14",
+          "name_en": "BEST USE OF ARTIFICIAL INTELLIGENCE",
+          "name_ru": "Лучшее использование искусственного",
+          "is_social": false
+        },
+        {
+          "code": "J15",
+          "name_en": "BEST PURPOSEFUL ADVERTISING CAMPAIGN",
+          "name_ru": "Лучшая общественно значимая рекламная",
+          "is_social": true
+        },
+        {
+          "code": "J16",
+          "name_en": "BEST ADVERTISING CAMPAIGN FOR NON-PROFIT",
+          "name_ru": "Лучшая рекламная кампания для",
+          "is_social": true
+        }
+      ]
+    },
+    {
+      "id": "60",
+      "code": "K",
+      "name_en": "Event",
+      "name_ru": "Событие",
+      "weight_mode": "fixed",
+      "criteria": [
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Логика и обоснованность замысла; цели, ЦА, формат, каналы, механики; связь с бизнес-целями.",
+          "default_weight": 0.15
+        },
+        {
+          "id": "creativity",
+          "name_en": "Creativity",
+          "name_ru": "Креатив",
+          "description_ru": "Концепция, сценарная архитектура, дизайн пространства, мультимедиа, механики вовлечения.",
+          "default_weight": 0.25
+        },
+        {
+          "id": "execution",
+          "name_en": "Execution",
+          "name_ru": "Реализация",
+          "description_ru": "Качество воплощения; соответствие стратегии и креативу; гибкость в непредвиденных ситуациях.",
+          "default_weight": 0.35
+        },
+        {
+          "id": "effectiveness_results",
+          "name_en": "Effectiveness & Results",
+          "name_ru": "Эффективность и результаты",
+          "description_ru": "Достигнутые KPI; количественные/качественные показатели; эффект для бренда и аудитории.",
+          "default_weight": 0.25
+        }
+      ],
+      "nominations": [
+        {
+          "code": "K01",
+          "name_en": "BEST MARKETING EVENT",
+          "name_ru": "Лучшее маркетинговое мероприятие",
+          "is_social": false
+        },
+        {
+          "code": "K02",
+          "name_en": "BEST EVENT-DRIVEN MARKETING CAMPAIGN",
+          "name_ru": "Лучшая маркетинговая кампания вокруг",
+          "is_social": false
+        },
+        {
+          "code": "K03",
+          "name_en": "BEST PR SUPPORT FOR THE EVENT",
+          "name_ru": "Лучшая PR поддержка мероприятия",
+          "is_social": false
+        },
+        {
+          "code": "K04",
+          "name_en": "BEST TRADE EVENT",
+          "name_ru": "Лучшее деловое мероприятие",
+          "is_social": false
+        },
+        {
+          "code": "K05",
+          "name_en": "BEST PUBLIC EVENT",
+          "name_ru": "Лучшее массовое мероприятие",
+          "is_social": false
+        },
+        {
+          "code": "K06",
+          "name_en": "BEST FESTIVAL",
+          "name_ru": "Лучший фестиваль",
+          "is_social": false
+        },
+        {
+          "code": "K07",
+          "name_en": "BEST PRIVATE EVENT",
+          "name_ru": "Лучшее закрытое мероприятие",
+          "is_social": false
+        },
+        {
+          "code": "K08",
+          "name_en": "BEST OFFLINE EVENT",
+          "name_ru": "Лучшее офлайн мероприятие",
+          "is_social": false
+        },
+        {
+          "code": "K09",
+          "name_en": "BEST ONLINE EVENT",
+          "name_ru": "Лучшее онлайн мероприятие",
+          "is_social": false
+        },
+        {
+          "code": "K10",
+          "name_en": "BEST HYBRID EVENT",
+          "name_ru": "Лучшее гибридное мероприятие",
+          "is_social": false
+        },
+        {
+          "code": "K11",
+          "name_en": "BEST SMART LIMITS EVENT",
+          "name_ru": "Лучшее событие при ограниченных ресурсах и/или бюджетах",
+          "is_social": false
+        },
+        {
+          "code": "K12",
+          "name_en": "BEST EVENT SPONSORSHIP",
+          "name_ru": "Лучшее спонсорство мероприятия",
+          "is_social": false
+        },
+        {
+          "code": "K13",
+          "name_en": "BEST BRAND SPACE",
+          "name_ru": "Лучшее пространство бренда",
+          "is_social": false
+        },
+        {
+          "code": "K14",
+          "name_en": "BEST EVENT BRANDING",
+          "name_ru": "Лучший брендинг мероприятия",
+          "is_social": false
+        },
+        {
+          "code": "K15",
+          "name_en": "BEST PURPOSEFUL EVENT",
+          "name_ru": "Лучшее общественно значимое мероприятие",
+          "is_social": true
+        },
+        {
+          "code": "K16",
+          "name_en": "BEST NON-PROFIT EVENT",
+          "name_ru": "Лучшее некоммерческое мероприятие",
+          "is_social": true
+        }
+      ]
+    },
+    {
+      "id": "61",
+      "code": "L",
+      "name_en": "Employer Brand & Intracorporate",
+      "name_ru": "Бренд работодателя и внутренние коммуникации",
+      "weight_mode": "per_nomination",
+      "criteria": [
+        {
+          "id": "strategy",
+          "name_en": "Strategy",
+          "name_ru": "Стратегия",
+          "description_ru": "Системный подход на основе понимания потребностей ЦА и стратегических целей компании."
+        },
+        {
+          "id": "creativity",
+          "name_en": "Creativity",
+          "name_ru": "Креатив",
+          "description_ru": "Новаторские идеи, подходы, концепции для вовлечения ЦА, культуры и опыта сотрудника."
+        },
+        {
+          "id": "execution",
+          "name_en": "Execution",
+          "name_ru": "Реализация",
+          "description_ru": "Качество исполнения; соответствие инструментов/каналов/форматов целям проекта."
+        },
+        {
+          "id": "effectiveness_results",
+          "name_en": "Effectiveness & Results",
+          "name_ru": "Эффективность и результаты",
+          "description_ru": "Значимые измеримые достижения в HR-коммуникациях, культуре, бренде работодателя, бизнесе."
+        }
+      ],
+      "nominations": [
+        {
+          "code": "L01",
+          "name_en": "BEST EMPLOYER BRAND BUILDING",
+          "name_ru": "Лучшее построение бренда работодателя",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.3,
+            "creativity": 0.1,
+            "execution": 0.25,
+            "effectiveness_results": 0.35
+          }
+        },
+        {
+          "code": "L02",
+          "name_en": "BEST INTERNAL COMMUNICATIONS STRATEGY",
+          "name_ru": "Лучшая реализация стратегии",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.3,
+            "creativity": 0.1,
+            "execution": 0.25,
+            "effectiveness_results": 0.35
+          }
+        },
+        {
+          "code": "L03",
+          "name_en": "BEST CREATIVITY IN EMPLOYER BRAND & INTERNAL COMMUNICATIONS",
+          "name_ru": "Лучший креатив в",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.15,
+            "creativity": 0.35,
+            "execution": 0.3,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "L04",
+          "name_en": "BEST PR CAMPAIGN FOR EMPLOYER BRAND",
+          "name_ru": "Лучшее использование инструментов PR для",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "L05",
+          "name_en": "BEST CORPORATE EVENT",
+          "name_ru": "Лучшее корпоративное мероприятие для решения HR-задач",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.3,
+            "execution": 0.4,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "L06",
+          "name_en": "BEST VIDEO FOR HR",
+          "name_ru": "Лучшее видео для решения HR-задач",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.3,
+            "execution": 0.4,
+            "effectiveness_results": 0.2
+          }
+        },
+        {
+          "code": "L07",
+          "name_en": "BEST HR COMMUNICATIONS MEDIA",
+          "name_ru": "Лучший корпоративный канал HR-коммуникаций",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.2,
+            "execution": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "L08",
+          "name_en": "BEST ESG PROJECT IN HR",
+          "name_ru": "Лучший HR-проект в области устойчивого развития (КСО)",
+          "is_social": true,
+          "weights": {
+            "strategy": 0.15,
+            "creativity": 0.25,
+            "execution": 0.3,
+            "effectiveness_results": 0.3
+          }
+        },
+        {
+          "code": "L09",
+          "name_en": "BEST TECH & AI IN HR COMMUNICATIONS",
+          "name_ru": "Лучшее использование технологий и ИИ в",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.2,
+            "creativity": 0.15,
+            "execution": 0.3,
+            "effectiveness_results": 0.35
+          }
+        },
+        {
+          "code": "L10",
+          "name_en": "BEST FUTURE TALENT PROGRAM",
+          "name_ru": "Лучшая программа для будущих сотрудников",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.15,
+            "execution": 0.25,
+            "effectiveness_results": 0.35
+          }
+        },
+        {
+          "code": "L11",
+          "name_en": "BEST WELL-BEING & WORK-LIFE BALANCE",
+          "name_ru": "Лучшая корпоративная программа",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.25,
+            "creativity": 0.15,
+            "execution": 0.25,
+            "effectiveness_results": 0.35
+          }
+        },
+        {
+          "code": "L12",
+          "name_en": "CORPORATE INFLUENCER OF THE YEAR",
+          "name_ru": "Корпоративный инфлюенсер года",
+          "is_social": false,
+          "weights": {
+            "strategy": 0.1,
+            "creativity": 0.3,
+            "execution": 0.3,
+            "effectiveness_results": 0.3
+          }
+        }
+      ]
+    }
+  ]
+}

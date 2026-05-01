@@ -1,0 +1,23 @@
+============================================================
+Judge input quality analysis (Silver Mercury 2025)
+============================================================
+
+Parameters:
+  Min evaluations per judge: 10 (and at least one L1 and one L2)
+  C1 well-written: ≥95% of evals with comment length ≥ 50 chars
+  C2 argument–score: ≥90% consistent (rule-based); both L1 and L2 must pass
+
+Results:
+  Judges considered (with ≥10 evals, both L1 and L2): 932
+  Judges qualifying as BEST QUALITY (pass both C1 and C2): 5
+
+  Pass C1 only: 628
+  Pass C2 only: 5
+  Pass both (best quality): 5
+
+Best-quality judge IDs (first 50):
+  8995 (L1: 18, L2: 10, total: 28)
+  9116 (L1: 13, L2: 7, total: 20)
+  9141 (L1: 14, L2: 11, total: 25)
+  9442 (L1: 26, L2: 14, total: 40)
+  9769 (L1: 30, L2: 14, total: 44)

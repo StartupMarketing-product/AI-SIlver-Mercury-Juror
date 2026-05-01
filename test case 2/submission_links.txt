@@ -1,0 +1,12 @@
+Project ID: 7022
+Project name: Визит.Имандра
+
+Original submission links from SM_2025:
+- Presentation PDF: https://silvermercury.ru/upload/presentations/presentations_a7ccfbb9.pdf
+- Results proof PDF: https://silvermercury.ru/upload/results/results_5e73940f.pdf
+- Video link: https://rutube.ru/video/private/c76245ade62adb9952cf65413169006a/?p=MOtSZp4omQWr1q4FvQsGFA
+
+Downloaded files in this folder:
+- presentation.pdf
+- results_proof.pdf
+- case_data.json

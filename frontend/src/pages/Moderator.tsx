@@ -1,0 +1,374 @@
+import { useEffect, useMemo, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import AvatarPlayerModal from "../components/AvatarPlayerModal";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "";
+
+const CATEGORY_NAMES: Record<string, string> = {
+  D01: "Лучшая цифровая кампания",
+  D10: "Лучшее использование ИИ",
+  D13: "Лучшее использование данных",
+  D15: "Лучшая цифровая платформа",
+};
+
+type AwardLevel = "gold" | "silver" | "bronze" | "shortlist" | "longlist";
+
+interface CaseRow {
+  evaluation_id: string;
+  case_id: string;
+  project_name?: string;
+  nomination_code?: string;
+  /** Pre-rendered HeyGen URL once Grand Moderator approved + the video is ready. */
+  avatar_video_url?: string | null;
+  /** Speech text — used as graceful fallback if video isn't ready yet. */
+  avatar_script?: string | null;
+}
+
+interface VerdictDetail {
+  award_level: AwardLevel;
+  total_score: number;
+  block_score: number;
+  one_paragraph_verdict: string;
+  criteria_scores: Array<{
+    criterion: string;
+    score: number;
+    rationale: string;
+  }>;
+  avatar_script?: string;
+}
+
+const AWARD_RU: Record<AwardLevel, string> = {
+  gold: "Золото",
+  silver: "Серебро",
+  bronze: "Бронза",
+  shortlist: "Шорт-лист",
+  longlist: "Лонг-лист",
+};
+
+const AWARD_COLOR: Record<AwardLevel, string> = {
+  gold: "#c89b1a",
+  silver: "#7d8590",
+  bronze: "#a06237",
+  shortlist: "#4a5568",
+  longlist: "#718096",
+};
+
+const CRITERION_RU: Record<string, string> = {
+  strategy: "Стратегия",
+  idea: "Идея",
+  execution: "Исполнение",
+  results: "Результаты",
+  challenge: "Вызов",
+  social_outcomes: "Социальный результат",
+};
+
+// Note: BEFORE the moderator clicks "Активировать ИИ жюри", each row shows
+// only project_name + the button. Score, arguments, and speech are hidden so
+// the live-judging illusion is preserved. AFTER the avatar plays (modal
+// closes), the row expands inline to show the full verdict + criteria + speech
+// for the moderator to reference during the human discussion.
+
+/**
+ * Festival-day moderator screen. URL: /moderator/:category (D01 / D10 / D13 / D15).
+ *
+ * Each row shows project + award + a big "Активировать ИИ жюри" button. Click
+ * → AvatarPlayerModal takes over the screen, plays the recorded HeyGen video,
+ * closes back to this list. The list visually marks rows that have been
+ * played in the current session (state lives only in browser memory — fine
+ * for a single jury session).
+ */
+export default function Moderator() {
+  const { category } = useParams<{ category: string }>();
+  const cat = (category ?? "").toUpperCase();
+
+  const [items, setItems] = useState<CaseRow[] | null>(null);
+  const [activeCase, setActiveCase] = useState<CaseRow | null>(null);
+  const [playedIds, setPlayedIds] = useState<Set<string>>(new Set());
+  const [verdictById, setVerdictById] = useState<Record<string, VerdictDetail>>({});
+  const [error, setError] = useState<string | null>(null);
+
+  const base = API_URL ? API_URL.replace(/\/$/, "") : "";
+
+  // Fetch the full verdict (best-effort). Called when the moderator clicks
+  // "Активировать ИИ жюри" so the scoreboard panel can render alongside the
+  // video. The verdict is cached and reused for the post-close inline reveal.
+  // Returns the verdict promise so callers can await it before opening the
+  // modal — but if fetch is slow or fails, the modal still opens and just
+  // shows the avatar without a scoreboard (graceful degradation).
+  async function fetchVerdict(evaluationId: string): Promise<VerdictDetail | null> {
+    if (verdictById[evaluationId]) return verdictById[evaluationId];
+    try {
+      const r = await fetch(`${base}/api/verdicts/${evaluationId}`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      if (!d?.output?.l2) return null;
+      const l2 = d.output.l2;
+      const detail: VerdictDetail = {
+        award_level: l2.award_level,
+        total_score: l2.total_score,
+        block_score: l2.block_score,
+        one_paragraph_verdict: l2.one_paragraph_verdict ?? "",
+        criteria_scores: l2.criteria_scores ?? [],
+        avatar_script: d.output.avatar_script,
+      };
+      setVerdictById((prev) => ({ ...prev, [evaluationId]: detail }));
+      return detail;
+    } catch {
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    setItems(null);
+    setError(null);
+    fetch(`${base}/api/evaluations?nomination=${encodeURIComponent(cat)}`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((arr: CaseRow[]) => {
+        // Backend may not yet support the ?nomination filter; client-side
+        // filter as a safety net so we never show wrong-category cases.
+        const filtered = arr.filter((r) => !r.nomination_code || r.nomination_code === cat);
+        setItems(filtered);
+      })
+      .catch((e) => {
+        setError(`Не удалось загрузить кейсы: ${(e as Error).message}`);
+        setItems([]);
+      });
+  }, [base, cat]);
+
+  const title = useMemo(
+    () => `${cat}${CATEGORY_NAMES[cat] ? ` · ${CATEGORY_NAMES[cat]}` : ""}`,
+    [cat]
+  );
+
+  function activate(row: CaseRow) {
+    // Kick off verdict fetch BEFORE opening the modal so the scoreboard data
+    // is in state by the time the staged messages finish (~7s) and the video
+    // starts playing. Fire-and-forget — if it lands late, React will rerender
+    // the modal with the scoreboard prop populated.
+    void fetchVerdict(row.evaluation_id);
+    setActiveCase(row);
+  }
+
+  function handleClose() {
+    if (activeCase) {
+      const id = activeCase.evaluation_id;
+      setPlayedIds((prev) => new Set(prev).add(id));
+      // verdict was already fetched in activate() — no need to refetch
+    }
+    setActiveCase(null);
+  }
+
+  return (
+    <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+      <header style={{ marginBottom: "1.5rem" }}>
+        <div style={{ color: "#666", fontSize: "0.85rem", marginBottom: 4 }}>
+          <Link to="/" style={{ color: "#666" }}>
+            ← Назад
+          </Link>
+        </div>
+        <h1 style={{ margin: 0, fontSize: "1.5rem" }}>{title}</h1>
+        <p style={{ color: "#666", margin: "6px 0 0", fontSize: "0.9rem" }}>
+          Нажмите «Активировать ИИ жюри» рядом с обсуждаемым кейсом.
+        </p>
+      </header>
+
+      {error && (
+        <div
+          style={{
+            background: "#fff5f5",
+            border: "1px solid #fc8181",
+            color: "#c53030",
+            padding: "10px 14px",
+            borderRadius: 6,
+            marginBottom: 16,
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {!items ? (
+        <p>Загрузка…</p>
+      ) : items.length === 0 ? (
+        <p style={{ color: "#666" }}>В номинации {cat} пока нет готовых кейсов.</p>
+      ) : (
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+          {items.map((row) => {
+            const played = playedIds.has(row.evaluation_id);
+            const verdict = verdictById[row.evaluation_id];
+            return (
+              <li
+                key={row.evaluation_id}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 14,
+                  padding: "18px 20px",
+                  border: "1px solid",
+                  borderColor: played ? "#cbd5e0" : "#e2e8f0",
+                  borderRadius: 8,
+                  background: played ? "#fafbfc" : "#fff",
+                }}
+              >
+                {/* Top row: project + button (or "Воспроизведено" tag) */}
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: "1.05rem",
+                        fontWeight: 500,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {row.project_name ?? row.case_id.slice(0, 8)}
+                    </div>
+                    {played && verdict && (
+                      <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "2px 10px",
+                            borderRadius: 999,
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            color: "#fff",
+                            background: AWARD_COLOR[verdict.award_level],
+                          }}
+                        >
+                          {AWARD_RU[verdict.award_level]}
+                        </span>
+                        <span style={{ color: "#666", fontSize: "0.85rem" }}>
+                          {verdict.total_score?.toFixed(1)} / 10
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {!played ? (
+                    <button
+                      onClick={() => activate(row)}
+                      style={{
+                        padding: "12px 22px",
+                        background: "#1a1a1a",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontSize: "0.95rem",
+                        fontWeight: 500,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Активировать ИИ жюри
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => activate(row)}
+                      style={{
+                        padding: "10px 18px",
+                        background: "#fff",
+                        color: "#1a1a1a",
+                        border: "1px solid #cbd5e0",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontSize: "0.85rem",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Воспроизвести ещё раз
+                    </button>
+                  )}
+                </div>
+
+                {/* Verdict reveal — only after the avatar has played */}
+                {played && verdict && (
+                  <div
+                    style={{
+                      borderTop: "1px solid #e2e8f0",
+                      paddingTop: 12,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 14,
+                    }}
+                  >
+                    {verdict.one_paragraph_verdict && (
+                      <p style={{ margin: 0, lineHeight: 1.55, fontSize: "0.95rem", color: "#222" }}>
+                        {verdict.one_paragraph_verdict}
+                      </p>
+                    )}
+
+                    {verdict.criteria_scores?.length > 0 && (
+                      <section style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div style={{ fontSize: "0.85rem", color: "#666", fontWeight: 600 }}>
+                          Оценки по критериям
+                        </div>
+                        {verdict.criteria_scores.map((c) => (
+                          <div
+                            key={c.criterion}
+                            style={{
+                              display: "flex",
+                              gap: 12,
+                              padding: "8px 12px",
+                              background: "#fff",
+                              border: "1px solid #edf2f7",
+                              borderRadius: 6,
+                            }}
+                          >
+                            <div style={{ minWidth: 110, fontWeight: 500, fontSize: "0.85rem" }}>
+                              {CRITERION_RU[c.criterion] ?? c.criterion}
+                            </div>
+                            <div style={{ minWidth: 50, color: "#1a1a1a", fontWeight: 600, fontSize: "0.85rem" }}>
+                              {c.score?.toFixed(1)} / 10
+                            </div>
+                            <div style={{ flex: 1, color: "#444", fontSize: "0.85rem", lineHeight: 1.45 }}>
+                              {c.rationale}
+                            </div>
+                          </div>
+                        ))}
+                      </section>
+                    )}
+
+                    {verdict.avatar_script && (
+                      <details style={{ background: "#fff", border: "1px solid #edf2f7", borderRadius: 6, padding: "8px 12px" }}>
+                        <summary style={{ cursor: "pointer", fontSize: "0.85rem", color: "#666", fontWeight: 600 }}>
+                          Текст выступления
+                        </summary>
+                        <p style={{ margin: "8px 0 0", whiteSpace: "pre-wrap", lineHeight: 1.5, fontSize: "0.9rem" }}>
+                          {verdict.avatar_script}
+                        </p>
+                      </details>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <AvatarPlayerModal
+        open={!!activeCase}
+        videoUrl={activeCase?.avatar_video_url ?? null}
+        speechFallback={activeCase?.avatar_script ?? undefined}
+        projectName={activeCase?.project_name}
+        scoreboard={
+          activeCase && verdictById[activeCase.evaluation_id]
+            ? {
+                award_level: verdictById[activeCase.evaluation_id].award_level,
+                total_score: verdictById[activeCase.evaluation_id].total_score,
+                block_score: verdictById[activeCase.evaluation_id].block_score,
+                criteria_scores: verdictById[activeCase.evaluation_id].criteria_scores,
+                nomination_code: activeCase.nomination_code,
+              }
+            : null
+        }
+        onClose={handleClose}
+      />
+    </div>
+  );
+}

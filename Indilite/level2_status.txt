@@ -1,0 +1,8 @@
+project_id: 5784
+project_name: Гриль-сезон и фестиваль индейки Индилайт 2024
+
+Level 2 status in SM_2025.json:
+- level2: null
+
+Interpretation:
+- The case did not proceed to Level 2 scoring in the source data.

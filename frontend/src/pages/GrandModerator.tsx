@@ -1,0 +1,684 @@
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { apiFetch } from "../lib/auth";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "";
+
+type AwardLevel = "gold" | "silver" | "bronze" | "shortlist" | "longlist";
+
+type AvatarStatus =
+  | "scoring"
+  | "awaiting_review"
+  | "approved"
+  | "rendering"
+  | "ready"
+  | "failed";
+
+interface CaseRow {
+  evaluation_id: string;
+  case_id: string;
+  project_name?: string;
+  nomination_code?: string;
+  award_level: AwardLevel;
+  total_score: number;
+  avatar_status?: AvatarStatus;
+  avatar_video_url?: string | null;
+  avatar_script?: string | null;
+  one_paragraph_verdict?: string | null;
+}
+
+interface CriterionScoreRow {
+  criterion: string;
+  score: number;
+  rationale: string;
+  evidence_ids?: string[];
+}
+
+interface RichVerdict {
+  evaluation_id: string;
+  case_id: string;
+  output: {
+    nomination_code: string;
+    block_code: string;
+    l2: {
+      criteria_scores: CriterionScoreRow[];
+      block_score: number;
+      total_score: number;
+      award_level: AwardLevel;
+      one_paragraph_verdict: string;
+      caps_applied?: Array<{ criterion: string; original_score: number; capped_score: number; reason: string }>;
+    };
+  };
+}
+
+const CRITERION_RU: Record<string, string> = {
+  strategy: "Стратегия",
+  idea: "Идея",
+  execution: "Исполнение",
+  results: "Результаты",
+  challenge: "Вызов",
+  social_outcomes: "Социальный результат",
+};
+
+const STATUS_RU: Record<AvatarStatus, string> = {
+  scoring: "Идёт оценка",
+  awaiting_review: "Ожидает проверки",
+  approved: "Принято",
+  rendering: "Видео рендерится",
+  ready: "Видео готово",
+  failed: "Ошибка",
+};
+
+const STATUS_COLOR: Record<AvatarStatus, string> = {
+  scoring: "#718096",
+  awaiting_review: "#b7791f",
+  approved: "#2c5282",
+  rendering: "#805ad5",
+  ready: "#2f855a",
+  failed: "#c53030",
+};
+
+const AWARD_RU: Record<AwardLevel, string> = {
+  gold: "Золото",
+  silver: "Серебро",
+  bronze: "Бронза",
+  shortlist: "Шорт-лист",
+  longlist: "Лонг-лист",
+};
+
+const AWARD_COLOR: Record<AwardLevel, string> = {
+  gold: "#c89b1a",
+  silver: "#7d8590",
+  bronze: "#a06237",
+  shortlist: "#4a5568",
+  longlist: "#718096",
+};
+
+export default function GrandModerator() {
+  const [items, setItems] = useState<CaseRow[] | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ id: string; speech: string } | null>(null);
+  const [busy, setBusy] = useState<null | "upload" | "save" | "approve">(null);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  // Tracks how many cases the most recent import dispatched for scoring.
+  // We compare against items.length to show progress until all cases land.
+  const [expectedTotal, setExpectedTotal] = useState<number | null>(null);
+  const [importedAt, setImportedAt] = useState<number | null>(null);
+
+  const base = API_URL ? API_URL.replace(/\/$/, "") : "";
+
+  function reload() {
+    fetch(`${base}/api/evaluations`)
+      .then((r) => r.json())
+      .then((arr: CaseRow[]) => setItems(arr))
+      .catch(() => setItems([]));
+  }
+
+  // Initial load + auto-refresh every 5s while any cases are still scoring
+  // or rendering. The polling auto-stops once everything reaches a terminal
+  // state (ready, awaiting_review, approved, failed) so it doesn't keep
+  // hitting the API forever.
+  useEffect(() => {
+    reload();
+    const tick = setInterval(reload, 5000);
+    return () => clearInterval(tick);
+  }, [base]);
+
+  const selected = items?.find((i) => i.evaluation_id === selectedId) ?? null;
+
+  // Rich verdict for the selected case (criteria scores, caps_applied, etc.)
+  const [richVerdict, setRichVerdict] = useState<RichVerdict | null>(null);
+  useEffect(() => {
+    if (!selectedId) {
+      setRichVerdict(null);
+      return;
+    }
+    fetch(`${base}/api/verdicts/${selectedId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setRichVerdict(d ?? null))
+      .catch(() => setRichVerdict(null));
+  }, [base, selectedId]);
+
+  // Detect inconsistency between the speech text's mentioned band and the
+  // post-cap final award. Example: speech opens with "Серебро" but caps_applied
+  // dropped the score so total_score puts it in Бронза. Surface this so the
+  // Grand Moderator knows to fix the speech before approving.
+  const speechMismatchHint = (() => {
+    if (!selected || !selected.avatar_script) return null;
+    const txt = selected.avatar_script.toLowerCase();
+    const mentions = (band: string) => txt.startsWith(band) || txt.includes(`${band}.`);
+    const opener =
+      mentions("золото") ? "gold"
+      : mentions("серебро") ? "silver"
+      : mentions("бронза") ? "bronze"
+      : mentions("шорт-лист") || mentions("шортлист") ? "shortlist"
+      : mentions("лонг-лист") || mentions("лонглист") ? "longlist"
+      : null;
+    if (!opener || opener === selected.award_level) return null;
+    return { speechBand: opener, actualBand: selected.award_level };
+  })();
+
+  async function handleUpload(file: File) {
+    setBusy("upload");
+    setError(null);
+    setUploadStatus(`Загрузка ${file.name}…`);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiFetch(`${base}/api/admin/import-json`, {
+        method: "POST",
+        body: fd,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      const body = await res.json();
+      const total = Number(body.queued ?? body.imported ?? 0);
+      setExpectedTotal(total > 0 ? total : null);
+      setImportedAt(Date.now());
+      setUploadStatus(
+        `Загружено ${body.imported ?? "?"} кейсов. Запущена оценка ${body.queued ?? "?"} кейсов.`
+      );
+      reload();
+    } catch (e) {
+      setError(`Ошибка загрузки: ${(e as Error).message}`);
+      setUploadStatus(null);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleSaveSpeech() {
+    if (!editing || !selected) return;
+    setBusy("save");
+    setError(null);
+    try {
+      const res = await apiFetch(`${base}/api/admin/cases/${selected.evaluation_id}/speech`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar_script: editing.speech }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setEditing(null);
+      reload();
+    } catch (e) {
+      setError(`Не удалось сохранить речь: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleApproveAndRender() {
+    if (!selected) return;
+    setBusy("approve");
+    setError(null);
+    try {
+      const res = await apiFetch(
+        `${base}/api/admin/cases/${selected.evaluation_id}/approve-and-render`,
+        { method: "POST" }
+      );
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Surface the actual HeyGen error (in body.detail) so the Grand
+        // Moderator can see what HeyGen actually said. Examples we've seen:
+        // 401 wrong API key, 400 bad avatar/voice id, 402 out of credits.
+        const parts = [body?.error, body?.detail].filter(Boolean).join(" — ");
+        throw new Error(parts || `HTTP ${res.status}`);
+      }
+      reload();
+    } catch (e) {
+      setError(`Не удалось запустить рендер: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div style={{ display: "flex", gap: "1.5rem" }}>
+      <aside style={{ width: 320, flexShrink: 0 }}>
+        <div style={{ marginBottom: 12 }}>
+          <Link to="/" style={{ color: "#666", fontSize: "0.85rem" }}>
+            ← Назад
+          </Link>
+        </div>
+        <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>Главный модератор</h2>
+        <section style={{ marginBottom: 18, padding: 12, border: "1px dashed #cbd5e0", borderRadius: 6 }}>
+          <div style={{ fontSize: "0.85rem", marginBottom: 8, color: "#444" }}>
+            Загрузка JSON со всеми заявками сезона
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".json,application/json"
+            disabled={busy !== null}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleUpload(f);
+            }}
+            style={{ fontSize: "0.85rem" }}
+          />
+          {uploadStatus && (
+            <div style={{ marginTop: 8, fontSize: "0.8rem", color: "#2f855a" }}>{uploadStatus}</div>
+          )}
+        </section>
+
+        <h3 style={{ fontSize: "0.95rem", margin: "0 0 8px" }}>Кейсы ({items?.length ?? 0})</h3>
+
+        {/* Live scoring-progress banner: visible while imported cases are
+            still being evaluated by the AI in the background. */}
+        {expectedTotal !== null && items !== null && items.length < expectedTotal && (
+          <div
+            style={{
+              marginBottom: 10,
+              padding: "10px 12px",
+              border: "1px solid #f6e05e",
+              background: "#fffbea",
+              borderRadius: 6,
+              fontSize: "0.85rem",
+              color: "#7b6107",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: "#d69e2e",
+                display: "inline-block",
+                animation: "pulse 1.4s ease-in-out infinite",
+              }}
+            />
+            <div>
+              <div style={{ fontWeight: 600 }}>
+                Идёт оценка кейсов: {items.length} из {expectedTotal}
+              </div>
+              <div style={{ color: "#9c7a1a", fontSize: "0.75rem" }}>
+                Список обновляется автоматически каждые 5 секунд. Оценка одного кейса занимает ~30 секунд.
+              </div>
+            </div>
+            <style>{`
+              @keyframes pulse {
+                0%, 100% { opacity: 0.4; transform: scale(0.85); }
+                50% { opacity: 1; transform: scale(1.1); }
+              }
+            `}</style>
+          </div>
+        )}
+
+        {/* "All done" confirmation banner — shows for ~10s after the count
+            catches up, then auto-hides. */}
+        {expectedTotal !== null &&
+          items !== null &&
+          items.length >= expectedTotal &&
+          importedAt !== null &&
+          Date.now() - importedAt < 60_000 && (
+            <div
+              style={{
+                marginBottom: 10,
+                padding: "10px 12px",
+                border: "1px solid #9ae6b4",
+                background: "#f0fff4",
+                borderRadius: 6,
+                fontSize: "0.85rem",
+                color: "#22543d",
+              }}
+            >
+              ✓ Готово. Оценено {items.length} кейсов.
+            </div>
+          )}
+
+        {!items ? (
+          <p>Загрузка…</p>
+        ) : items.length === 0 ? (
+          <p style={{ color: "#666" }}>Кейсов нет. Загрузите JSON.</p>
+        ) : (
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+            {items.map((it) => {
+              const active = it.evaluation_id === selectedId;
+              const status = (it.avatar_status ?? "awaiting_review") as AvatarStatus;
+              return (
+                <li key={it.evaluation_id}>
+                  <button
+                    onClick={() => {
+                      setSelectedId(it.evaluation_id);
+                      setEditing(null);
+                    }}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "10px 12px",
+                      border: "1px solid",
+                      borderColor: active ? "#1a1a1a" : "#ddd",
+                      background: active ? "#f5f5f5" : "#fff",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
+                      {it.project_name ?? it.case_id.slice(0, 8)}
+                    </span>
+                    <span style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                      {it.nomination_code && (
+                        <span style={{ fontSize: "0.7rem", color: "#666", fontWeight: 500 }}>
+                          {it.nomination_code}
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "2px 6px",
+                          borderRadius: 999,
+                          fontSize: "0.7rem",
+                          fontWeight: 600,
+                          color: "#fff",
+                          background: AWARD_COLOR[it.award_level],
+                        }}
+                      >
+                        {AWARD_RU[it.award_level]}
+                      </span>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "2px 6px",
+                          borderRadius: 999,
+                          fontSize: "0.7rem",
+                          fontWeight: 600,
+                          color: "#fff",
+                          background: STATUS_COLOR[status],
+                        }}
+                      >
+                        {STATUS_RU[status]}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </aside>
+
+      <section style={{ flex: 1, minWidth: 0 }}>
+        {error && (
+          <div
+            style={{
+              background: "#fff5f5",
+              border: "1px solid #fc8181",
+              color: "#c53030",
+              padding: "10px 14px",
+              borderRadius: 6,
+              marginBottom: 16,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {!selected ? (
+          <p style={{ color: "#666" }}>Выберите кейс слева, чтобы просмотреть, отредактировать речь или запустить рендер видео.</p>
+        ) : (
+          <article style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <header>
+              <h1 style={{ margin: 0, fontSize: "1.4rem" }}>
+                {selected.project_name ?? selected.case_id.slice(0, 8)}
+              </h1>
+              <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {selected.nomination_code && (
+                  <span style={{ fontSize: "0.85rem", color: "#444" }}>
+                    Номинация {selected.nomination_code}
+                  </span>
+                )}
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    color: "#fff",
+                    background: AWARD_COLOR[selected.award_level],
+                  }}
+                >
+                  {AWARD_RU[selected.award_level]} · {selected.total_score?.toFixed(1)}
+                </span>
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    color: "#fff",
+                    background: STATUS_COLOR[(selected.avatar_status ?? "awaiting_review") as AvatarStatus],
+                  }}
+                >
+                  {STATUS_RU[(selected.avatar_status ?? "awaiting_review") as AvatarStatus]}
+                </span>
+              </div>
+            </header>
+
+            {selected.one_paragraph_verdict && (
+              <p style={{ margin: 0, lineHeight: 1.6, fontSize: "1rem" }}>
+                {selected.one_paragraph_verdict}
+              </p>
+            )}
+
+            {/* Per-criterion scores breakdown (from rich verdict). */}
+            {richVerdict?.output?.l2?.criteria_scores?.length ? (
+              <section
+                style={{
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 8,
+                  padding: 16,
+                  background: "#fff",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <strong style={{ fontSize: "0.95rem", marginBottom: 6 }}>Оценки по критериям</strong>
+                {richVerdict.output.l2.criteria_scores.map((c) => (
+                  <div
+                    key={c.criterion}
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      padding: "10px 12px",
+                      borderBottom: "1px solid #f1f5f9",
+                    }}
+                  >
+                    <div style={{ minWidth: 130, fontWeight: 600, fontSize: "0.88rem" }}>
+                      {CRITERION_RU[c.criterion] ?? c.criterion}
+                    </div>
+                    <div style={{ minWidth: 60, color: "#1a1a1a", fontWeight: 700, fontSize: "0.95rem" }}>
+                      {c.score?.toFixed(1)}
+                    </div>
+                    <div style={{ flex: 1, color: "#444", fontSize: "0.88rem", lineHeight: 1.5 }}>
+                      {c.rationale}
+                    </div>
+                  </div>
+                ))}
+                {richVerdict.output.l2.caps_applied && richVerdict.output.l2.caps_applied.length > 0 && (
+                  <div style={{ paddingTop: 10, borderTop: "1px dashed #e2e8f0", fontSize: "0.82rem", color: "#666" }}>
+                    <strong>Применённые ограничения:</strong>
+                    <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                      {richVerdict.output.l2.caps_applied.map((cap, i) => (
+                        <li key={i} style={{ marginBottom: 2 }}>
+                          {cap.criterion}: {cap.original_score} → {cap.capped_score}{" "}
+                          <span style={{ color: "#888" }}>({cap.reason})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
+            ) : null}
+
+            {/* Speech / award mismatch warning */}
+            {speechMismatchHint && (
+              <div
+                style={{
+                  background: "#fffbea",
+                  border: "1px solid #f6e05e",
+                  color: "#7b6107",
+                  padding: "10px 14px",
+                  borderRadius: 6,
+                  fontSize: "0.88rem",
+                  lineHeight: 1.5,
+                }}
+              >
+                <strong>Внимание:</strong> текст выступления начинается с упоминания «{
+                  speechMismatchHint.speechBand === "gold" ? "Золото"
+                  : speechMismatchHint.speechBand === "silver" ? "Серебро"
+                  : speechMismatchHint.speechBand === "bronze" ? "Бронза"
+                  : speechMismatchHint.speechBand === "shortlist" ? "Шорт-лист"
+                  : "Лонг-лист"
+                }», но итоговый балл соответствует «{
+                  selected.award_level === "gold" ? "Золото"
+                  : selected.award_level === "silver" ? "Серебро"
+                  : selected.award_level === "bronze" ? "Бронза"
+                  : selected.award_level === "shortlist" ? "Шорт-лист"
+                  : "Лонг-лист"
+                }». Это происходит, когда автоматические ограничения по доказательной базе снижают балл
+                после генерации речи. Отредактируйте речь, прежде чем утверждать.
+              </div>
+            )}
+
+            <section
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: 8,
+                padding: 16,
+                background: "#fafafa",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <strong style={{ fontSize: "0.95rem" }}>Текст выступления</strong>
+                {!editing && (
+                  <button
+                    onClick={() =>
+                      setEditing({
+                        id: selected.evaluation_id,
+                        speech: selected.avatar_script ?? "",
+                      })
+                    }
+                    style={{
+                      padding: "4px 12px",
+                      background: "#2c5282",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 4,
+                      cursor: "pointer",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    Редактировать
+                  </button>
+                )}
+              </div>
+              {editing ? (
+                <>
+                  <textarea
+                    value={editing.speech}
+                    onChange={(e) => setEditing({ ...editing, speech: e.target.value })}
+                    rows={10}
+                    style={{
+                      width: "100%",
+                      padding: 10,
+                      fontSize: "0.95rem",
+                      lineHeight: 1.5,
+                      fontFamily: "inherit",
+                      border: "1px solid #cbd5e0",
+                      borderRadius: 4,
+                      resize: "vertical",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={handleSaveSpeech}
+                      disabled={busy !== null}
+                      style={{
+                        padding: "6px 14px",
+                        background: "#2f855a",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 4,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Сохранить
+                    </button>
+                    <button
+                      onClick={() => setEditing(null)}
+                      disabled={busy !== null}
+                      style={{
+                        padding: "6px 14px",
+                        background: "#e2e8f0",
+                        color: "#1a1a1a",
+                        border: "none",
+                        borderRadius: 4,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p style={{ margin: 0, lineHeight: 1.6, fontSize: "0.95rem", whiteSpace: "pre-wrap" }}>
+                  {selected.avatar_script?.trim() || "(текст отсутствует)"}
+                </p>
+              )}
+            </section>
+
+            <section style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                onClick={handleApproveAndRender}
+                disabled={
+                  busy !== null ||
+                  !selected.avatar_script ||
+                  selected.avatar_status === "rendering" ||
+                  selected.avatar_status === "ready"
+                }
+                style={{
+                  padding: "10px 20px",
+                  background: "#1a1a1a",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: busy !== null ? "default" : "pointer",
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                }}
+              >
+                Утвердить и запустить рендер видео
+              </button>
+              {selected.avatar_video_url && (
+                <a
+                  href={selected.avatar_video_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "#2c5282", fontSize: "0.9rem" }}
+                >
+                  Открыть видео в новом окне ↗
+                </a>
+              )}
+            </section>
+          </article>
+        )}
+      </section>
+    </div>
+  );
+}

@@ -1,0 +1,69 @@
+{
+  "sampled": 1,
+  "completed": 30,
+  "errors": 0,
+  "exact_match": 6,
+  "exact_match_pct": 20,
+  "within1_band": 16,
+  "within1_band_pct": 53.3,
+  "by_class": {
+    "longlist": 1
+  },
+  "per_block": {
+    "50": {
+      "n": 2,
+      "exact": 1,
+      "within1": 1
+    },
+    "51": {
+      "n": 1,
+      "exact": 1,
+      "within1": 1
+    },
+    "52": {
+      "n": 2,
+      "exact": 0,
+      "within1": 0
+    },
+    "53": {
+      "n": 7,
+      "exact": 1,
+      "within1": 5
+    },
+    "54": {
+      "n": 3,
+      "exact": 1,
+      "within1": 3
+    },
+    "55": {
+      "n": 4,
+      "exact": 1,
+      "within1": 1
+    },
+    "56": {
+      "n": 3,
+      "exact": 0,
+      "within1": 1
+    },
+    "57": {
+      "n": 2,
+      "exact": 0,
+      "within1": 1
+    },
+    "58": {
+      "n": 1,
+      "exact": 0,
+      "within1": 0
+    },
+    "60": {
+      "n": 3,
+      "exact": 1,
+      "within1": 1
+    },
+    "61": {
+      "n": 2,
+      "exact": 0,
+      "within1": 2
+    }
+  }
+}

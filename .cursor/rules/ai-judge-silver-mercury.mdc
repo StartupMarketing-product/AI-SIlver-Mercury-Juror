@@ -1,0 +1,27 @@
+---
+description: AI judge behaviour for Silver Mercury synthetic jury — follow judge guidelines; use full scale; avoid median clustering.
+globs: 
+  - "**/judge*.mjs"
+  - "**/judge*.py"
+  - "**/ai_judge*.md"
+  - "**/analyze*.mjs"
+  - "**/*jury*"
+  - "**/*juror*"
+---
+
+# AI Judge — Silver Mercury Synthetic Jury
+
+When working on the **synthetic AI juror** or any **evaluation/scoring** logic for Silver Mercury:
+
+1. **Follow the judge spec:** Use [ai_judge_guidelines.md](ai_judge_guidelines.md) in the project root as the governing policy for all judgements. Reference it for scale definitions, two-step (critique then score) flow, few-shot style, and anti-hedging rules.
+
+2. **Use the full 1–10 scale.** Do not cluster all entries around 6–8. Most entries should fall between 3 and 6; 9–10 must be rare (top ~5%). When in doubt between two scores, choose the **lower** one.
+
+3. **Default assumption:** Most work is mediocre. Only outstanding ideas and execution receive 9–10. The judge's goal is **discrimination**, not encouragement.
+
+4. **Implementation:** Any eval function or script that calls an LLM for scoring must:
+   - Use a system prompt (or constant) that mirrors the scale and rules in `ai_judge_guidelines.md`.
+   - Implement critique-then-score (list strengths/weaknesses, then assign band and score per criterion).
+   - Enforce hard rules (e.g. missing results → cap Results score; off-category → low / not_long).
+
+5. **Testing:** When adding or changing judge logic, check that score **distributions** have adequate variance and are not collapsed to the median; compare to historical human distributions from SM_2025.json where possible.

@@ -1,0 +1,30 @@
+{
+  "sampled": 1,
+  "completed": 46,
+  "errors": 0,
+  "per_submission": {
+    "exact_match": 6,
+    "exact_match_pct": 13,
+    "within1_band": 11,
+    "within1_band_pct": 23.9
+  },
+  "per_project_best": {
+    "exact_match": 8,
+    "exact_match_pct": 17.4,
+    "within1_band": 16,
+    "within1_band_pct": 34.8
+  },
+  "by_class_per_submission": {
+    "silver": 1
+  },
+  "by_class_per_project_best": {
+    "silver": 1
+  },
+  "per_block": {
+    "53": {
+      "n": 46,
+      "exact": 6,
+      "within1": 11
+    }
+  }
+}
