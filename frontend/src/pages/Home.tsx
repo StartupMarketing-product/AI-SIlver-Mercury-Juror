@@ -28,18 +28,6 @@ export default function Home() {
       {/* Hero — chip-style headline echoing the Sber "Больше / чем / маркетинг" composition */}
       <section style={{ padding: "60px 0 56px" }}>
         <ChipHeadline />
-        <p
-          style={{
-            color: "var(--fg-secondary)",
-            fontSize: "1.05rem",
-            maxWidth: 560,
-            margin: "20px 0 0",
-            lineHeight: 1.55,
-          }}
-        >
-          Синтетический член жюри Silver Mercury XXVII. Подготавливает оценки,
-          речи и видео-выступления для четырёх цифровых номинаций.
-        </p>
       </section>
 
       {/* Grand Moderator — single hero card */}
@@ -121,9 +109,6 @@ export default function Home() {
               <div style={{ fontSize: "1.05rem", fontWeight: 600, lineHeight: 1.3, position: "relative" }}>
                 {c.name}
               </div>
-              <div style={{ color: "var(--fg-secondary)", fontSize: "0.85rem", position: "relative" }}>
-                Запуск ИИ-жюри во время обсуждения
-              </div>
             </Link>
           ))}
         </div>
@@ -187,7 +172,7 @@ function ChipHeadline() {
           color: "#fff",
         }}
       >
-        Silver Mercury
+        Серебряный Меркурий
       </span>
     </div>
   );

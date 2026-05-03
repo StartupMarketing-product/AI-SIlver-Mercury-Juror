@@ -397,7 +397,7 @@ export default function GrandModerator() {
                 fontWeight: 500,
               }}
             >
-              {busy === "render-all" ? "Запускаем рендер…" : "Записать все видео"}
+              {busy === "render-all" ? "Запускаем рендер…" : "Записать выступления для всех кейсов"}
             </button>
             {renderAllStatus && (
               <div style={{ marginTop: 6, fontSize: "0.78rem", color: "var(--accent-mint)" }}>
