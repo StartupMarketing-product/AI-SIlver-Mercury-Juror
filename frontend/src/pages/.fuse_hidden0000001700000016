@@ -164,13 +164,13 @@ export default function Moderator() {
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
       <header style={{ marginBottom: "1.5rem" }}>
-        <div style={{ color: "var(--fg-secondary)", fontSize: "0.85rem", marginBottom: 4 }}>
-          <Link to="/" style={{ color: "var(--fg-secondary)" }}>
+        <div style={{ color: "#666", fontSize: "0.85rem", marginBottom: 4 }}>
+          <Link to="/" style={{ color: "#666" }}>
             ← Назад
           </Link>
         </div>
         <h1 style={{ margin: 0, fontSize: "1.5rem" }}>{title}</h1>
-        <p style={{ color: "var(--fg-secondary)", margin: "6px 0 0", fontSize: "0.9rem" }}>
+        <p style={{ color: "#666", margin: "6px 0 0", fontSize: "0.9rem" }}>
           Нажмите «Активировать ИИ жюри» рядом с обсуждаемым кейсом.
         </p>
       </header>
@@ -180,7 +180,7 @@ export default function Moderator() {
           style={{
             background: "rgba(255,107,107,0.10)",
             border: "1px solid rgba(255,107,107,0.45)",
-            color: "#ff6b6b",
+            color: "#c53030",
             padding: "10px 14px",
             borderRadius: 6,
             marginBottom: 16,
@@ -193,7 +193,7 @@ export default function Moderator() {
       {!items ? (
         <p>Загрузка…</p>
       ) : items.length === 0 ? (
-        <p style={{ color: "var(--fg-secondary)" }}>В номинации {cat} пока нет готовых кейсов.</p>
+        <p style={{ color: "#666" }}>В номинации {cat} пока нет готовых кейсов.</p>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
           {items.map((row) => {
@@ -208,9 +208,9 @@ export default function Moderator() {
                   gap: 14,
                   padding: "18px 20px",
                   border: "1px solid",
-                  borderColor: played ? "var(--border-strong)" : "var(--border-subtle)",
+                  borderColor: played ? "#cbd5e0" : "#e2e8f0",
                   borderRadius: 8,
-                  background: played ? "var(--bg-elev-2)" : "var(--bg-elev-1)",
+                  background: played ? "#fafbfc" : "#fff",
                 }}
               >
                 {/* Top row: project + button (or "Воспроизведено" tag) */}
@@ -236,13 +236,13 @@ export default function Moderator() {
                             borderRadius: 999,
                             fontSize: "0.8rem",
                             fontWeight: 600,
-                            color: "var(--fg-on-light)",
+                            color: "#fff",
                             background: AWARD_COLOR[verdict.award_level],
                           }}
                         >
                           {AWARD_RU[verdict.award_level]}
                         </span>
-                        <span style={{ color: "var(--fg-secondary)", fontSize: "0.85rem" }}>
+                        <span style={{ color: "#666", fontSize: "0.85rem" }}>
                           {verdict.total_score?.toFixed(1)} / 10
                         </span>
                       </div>
@@ -254,8 +254,8 @@ export default function Moderator() {
                       onClick={() => activate(row)}
                       style={{
                         padding: "12px 22px",
-                        background: "var(--fg-primary)",
-                        color: "var(--fg-on-light)",
+                        background: "#1a1a1a",
+                        color: "#fff",
                         border: "none",
                         borderRadius: 6,
                         cursor: "pointer",
@@ -304,7 +304,7 @@ export default function Moderator() {
 
                     {verdict.criteria_scores?.length > 0 && (
                       <section style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        <div style={{ fontSize: "0.85rem", color: "var(--fg-secondary)", fontWeight: 600 }}>
+                        <div style={{ fontSize: "0.85rem", color: "#666", fontWeight: 600 }}>
                           Оценки по критериям
                         </div>
                         {verdict.criteria_scores.map((c) => (
@@ -325,7 +325,7 @@ export default function Moderator() {
                             <div style={{ minWidth: 50, color: "var(--fg-primary)", fontWeight: 600, fontSize: "0.85rem" }}>
                               {c.score?.toFixed(1)} / 10
                             </div>
-                            <div style={{ flex: 1, color: "var(--fg-secondary)", fontSize: "0.85rem", lineHeight: 1.45 }}>
+                            <div style={{ flex: 1, color: "#444", fontSize: "0.85rem", lineHeight: 1.45 }}>
                               {c.rationale}
                             </div>
                           </div>
@@ -335,7 +335,7 @@ export default function Moderator() {
 
                     {verdict.avatar_script && (
                       <details style={{ background: "var(--bg-elev-1)", border: "1px solid var(--border-subtle)", borderRadius: 6, padding: "8px 12px" }}>
-                        <summary style={{ cursor: "pointer", fontSize: "0.85rem", color: "var(--fg-secondary)", fontWeight: 600 }}>
+                        <summary style={{ cursor: "pointer", fontSize: "0.85rem", color: "#666", fontWeight: 600 }}>
                           Текст выступления
                         </summary>
                         <p style={{ margin: "8px 0 0", whiteSpace: "pre-wrap", lineHeight: 1.5, fontSize: "0.9rem" }}>

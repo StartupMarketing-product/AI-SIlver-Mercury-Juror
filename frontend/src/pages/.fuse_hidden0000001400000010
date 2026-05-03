@@ -286,13 +286,13 @@ export default function GrandModerator() {
     <div style={{ display: "flex", gap: "1.5rem" }}>
       <aside style={{ width: 320, flexShrink: 0 }}>
         <div style={{ marginBottom: 12 }}>
-          <Link to="/" style={{ color: "var(--fg-secondary)", fontSize: "0.85rem" }}>
+          <Link to="/" style={{ color: "#666", fontSize: "0.85rem" }}>
             ← Назад
           </Link>
         </div>
         <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>Главный модератор</h2>
         <section style={{ marginBottom: 18, padding: 12, border: "1px dashed var(--border-strong)", borderRadius: 6 }}>
-          <div style={{ fontSize: "0.85rem", marginBottom: 8, color: "var(--fg-secondary)" }}>
+          <div style={{ fontSize: "0.85rem", marginBottom: 8, color: "#444" }}>
             Загрузка JSON со всеми заявками сезона
           </div>
           <input
@@ -344,7 +344,7 @@ export default function GrandModerator() {
               <div style={{ fontWeight: 600 }}>
                 Идёт оценка кейсов: {items.length} из {expectedTotal}
               </div>
-              <div style={{ color: "rgba(240,193,75,0.85)", fontSize: "0.75rem" }}>
+              <div style={{ color: "#9c7a1a", fontSize: "0.75rem" }}>
                 Список обновляется автоматически каждые 5 секунд. Оценка одного кейса занимает ~30 секунд.
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function GrandModerator() {
                 background: "rgba(94,224,192,0.10)",
                 borderRadius: 6,
                 fontSize: "0.85rem",
-                color: "var(--accent-mint)",
+                color: "#22543d",
               }}
             >
               ✓ Готово. Оценено {items.length} кейсов.
@@ -388,8 +388,8 @@ export default function GrandModerator() {
               style={{
                 width: "100%",
                 padding: "10px 12px",
-                background: busy === "render-all" ? "rgba(255,255,255,0.18)" : "var(--fg-primary)",
-                color: busy === "render-all" ? "var(--fg-secondary)" : "var(--fg-on-light)",
+                background: busy === "render-all" ? "#9ca3af" : "#1a1a1a",
+                color: "#fff",
                 border: "none",
                 borderRadius: 6,
                 cursor: busy === "render-all" ? "wait" : "pointer",
@@ -400,7 +400,7 @@ export default function GrandModerator() {
               {busy === "render-all" ? "Запускаем рендер…" : "Записать все видео"}
             </button>
             {renderAllStatus && (
-              <div style={{ marginTop: 6, fontSize: "0.78rem", color: "var(--accent-mint)" }}>
+              <div style={{ marginTop: 6, fontSize: "0.78rem", color: "#22543d" }}>
                 {renderAllStatus}
               </div>
             )}
@@ -410,7 +410,7 @@ export default function GrandModerator() {
         {!items ? (
           <p>Загрузка…</p>
         ) : items.length === 0 ? (
-          <p style={{ color: "var(--fg-secondary)" }}>Кейсов нет. Загрузите JSON.</p>
+          <p style={{ color: "#666" }}>Кейсов нет. Загрузите JSON.</p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
             {items.map((it) => {
@@ -428,8 +428,8 @@ export default function GrandModerator() {
                       textAlign: "left",
                       padding: "10px 12px",
                       border: "1px solid",
-                      borderColor: active ? "var(--accent-cyan)" : "var(--border-subtle)",
-                      background: active ? "var(--bg-elev-2)" : "var(--bg-elev-1)",
+                      borderColor: active ? "#1a1a1a" : "#ddd",
+                      background: active ? "#f5f5f5" : "#fff",
                       borderRadius: 6,
                       cursor: "pointer",
                       display: "flex",
@@ -442,7 +442,7 @@ export default function GrandModerator() {
                     </span>
                     <span style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
                       {it.nomination_code && (
-                        <span style={{ fontSize: "0.7rem", color: "var(--fg-secondary)", fontWeight: 500 }}>
+                        <span style={{ fontSize: "0.7rem", color: "#666", fontWeight: 500 }}>
                           {it.nomination_code}
                         </span>
                       )}
@@ -453,7 +453,7 @@ export default function GrandModerator() {
                           borderRadius: 999,
                           fontSize: "0.7rem",
                           fontWeight: 600,
-                          color: "var(--fg-on-light)",
+                          color: "#fff",
                           background: AWARD_COLOR[it.award_level],
                         }}
                       >
@@ -466,7 +466,7 @@ export default function GrandModerator() {
                           borderRadius: 999,
                           fontSize: "0.7rem",
                           fontWeight: 600,
-                          color: "var(--fg-on-light)",
+                          color: "#fff",
                           background: STATUS_COLOR[status],
                         }}
                       >
@@ -487,7 +487,7 @@ export default function GrandModerator() {
             style={{
               background: "rgba(255,107,107,0.10)",
               border: "1px solid rgba(255,107,107,0.45)",
-              color: "#ff6b6b",
+              color: "#c53030",
               padding: "10px 14px",
               borderRadius: 6,
               marginBottom: 16,
@@ -498,7 +498,7 @@ export default function GrandModerator() {
         )}
 
         {!selected ? (
-          <p style={{ color: "var(--fg-secondary)" }}>Выберите кейс слева, чтобы просмотреть, отредактировать речь или запустить рендер видео.</p>
+          <p style={{ color: "#666" }}>Выберите кейс слева, чтобы просмотреть, отредактировать речь или запустить рендер видео.</p>
         ) : (
           <article style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <header>
@@ -507,7 +507,7 @@ export default function GrandModerator() {
               </h1>
               <div style={{ marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {selected.nomination_code && (
-                  <span style={{ fontSize: "0.85rem", color: "var(--fg-secondary)" }}>
+                  <span style={{ fontSize: "0.85rem", color: "#444" }}>
                     Номинация {selected.nomination_code}
                   </span>
                 )}
@@ -518,7 +518,7 @@ export default function GrandModerator() {
                     borderRadius: 999,
                     fontSize: "0.75rem",
                     fontWeight: 600,
-                    color: "var(--fg-on-light)",
+                    color: "#fff",
                     background: AWARD_COLOR[selected.award_level],
                   }}
                 >
@@ -531,7 +531,7 @@ export default function GrandModerator() {
                     borderRadius: 999,
                     fontSize: "0.75rem",
                     fontWeight: 600,
-                    color: "var(--fg-on-light)",
+                    color: "#fff",
                     background: STATUS_COLOR[(selected.avatar_status ?? "awaiting_review") as AvatarStatus],
                   }}
                 >
@@ -573,22 +573,22 @@ export default function GrandModerator() {
                     <div style={{ minWidth: 130, fontWeight: 600, fontSize: "0.88rem" }}>
                       {CRITERION_RU[c.criterion] ?? c.criterion}
                     </div>
-                    <div style={{ minWidth: 60, color: "var(--fg-primary)", fontWeight: 700, fontSize: "0.95rem" }}>
+                    <div style={{ minWidth: 60, color: "#1a1a1a", fontWeight: 700, fontSize: "0.95rem" }}>
                       {c.score?.toFixed(1)}
                     </div>
-                    <div style={{ flex: 1, color: "var(--fg-secondary)", fontSize: "0.88rem", lineHeight: 1.5 }}>
+                    <div style={{ flex: 1, color: "#444", fontSize: "0.88rem", lineHeight: 1.5 }}>
                       {c.rationale}
                     </div>
                   </div>
                 ))}
                 {richVerdict.output.l2.caps_applied && richVerdict.output.l2.caps_applied.length > 0 && (
-                  <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border-subtle)", fontSize: "0.82rem", color: "var(--fg-secondary)" }}>
+                  <div style={{ paddingTop: 10, borderTop: "1px dashed #e2e8f0", fontSize: "0.82rem", color: "#666" }}>
                     <strong>Применённые ограничения:</strong>
                     <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
                       {richVerdict.output.l2.caps_applied.map((cap, i) => (
                         <li key={i} style={{ marginBottom: 2 }}>
                           {cap.criterion}: {cap.original_score} → {cap.capped_score}{" "}
-                          <span style={{ color: "var(--fg-tertiary)" }}>({cap.reason})</span>
+                          <span style={{ color: "#888" }}>({cap.reason})</span>
                         </li>
                       ))}
                     </ul>
@@ -650,8 +650,8 @@ export default function GrandModerator() {
                     }
                     style={{
                       padding: "4px 12px",
-                      background: "var(--accent-cyan)",
-                      color: "var(--fg-on-light)",
+                      background: "#2c5282",
+                      color: "#fff",
                       border: "none",
                       borderRadius: 4,
                       cursor: "pointer",
@@ -685,8 +685,8 @@ export default function GrandModerator() {
                       disabled={busy !== null}
                       style={{
                         padding: "6px 14px",
-                        background: "var(--accent-mint)",
-                        color: "var(--fg-on-light)",
+                        background: "#2f855a",
+                        color: "#fff",
                         border: "none",
                         borderRadius: 4,
                         cursor: "pointer",
@@ -699,8 +699,8 @@ export default function GrandModerator() {
                       disabled={busy !== null}
                       style={{
                         padding: "6px 14px",
-                        background: "var(--bg-elev-2)",
-                        color: "var(--fg-primary)",
+                        background: "#e2e8f0",
+                        color: "#1a1a1a",
                         border: "none",
                         borderRadius: 4,
                         cursor: "pointer",
@@ -728,8 +728,8 @@ export default function GrandModerator() {
                 }
                 style={{
                   padding: "10px 20px",
-                  background: "var(--fg-primary)",
-                  color: "var(--fg-on-light)",
+                  background: "#1a1a1a",
+                  color: "#fff",
                   border: "none",
                   borderRadius: 6,
                   cursor: busy !== null ? "default" : "pointer",

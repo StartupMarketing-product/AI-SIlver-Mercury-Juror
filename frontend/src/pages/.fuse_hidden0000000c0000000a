@@ -686,7 +686,7 @@ export default function GrandModerator() {
                       style={{
                         padding: "6px 14px",
                         background: "var(--accent-mint)",
-                        color: "var(--fg-on-light)",
+                        color: "#fff",
                         border: "none",
                         borderRadius: 4,
                         cursor: "pointer",

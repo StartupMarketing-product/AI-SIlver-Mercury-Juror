@@ -1,9 +1,187 @@
-* {
-  box-sizing: border-box;
+/* =============================================================================
+   AI Jury — global theme inspired by sbermarketing.ru
+   Dark navy canvas with subtle purple/blue radial glow, Inter typography,
+   capsule chips, cyan/purple accents.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Background layers */
+  --bg-base: #06061a;
+  --bg-elev-1: #0d0f25;        /* card surface */
+  --bg-elev-2: #14172e;        /* hover / inset surface */
+  --bg-input:  #0a0b1f;
+
+  /* Text */
+  --fg-primary:   #ffffff;
+  --fg-secondary: rgba(255, 255, 255, 0.65);
+  --fg-tertiary:  rgba(255, 255, 255, 0.4);
+  --fg-on-light:  #06061a;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  /* Accents (Sber-style brights) */
+  --accent-cyan:   #3FAEFF;
+  --accent-cyan-2: #00B7FF;
+  --accent-purple: #9F66FF;
+  --accent-magenta: #E661D9;
+  --accent-mint:   #5EE0C0;
+
+  /* Award colors — slightly brighter on dark */
+  --gold:   #f0c14b;
+  --silver: #c4ced6;
+  --bronze: #d18a52;
+
+  /* Spacing tokens */
+  --radius-pill: 999px;
+  --radius-card: 14px;
+  --radius-sm:   8px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 60px rgba(0,0,0,0.4);
+
+  color-scheme: dark;
 }
-body {
+
+* { box-sizing: border-box; }
+
+html, body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #f5f5f5;
-  color: #1a1a1a;
+  padding: 0;
+  background: var(--bg-base);
+  color: var(--fg-primary);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-feature-settings: "ss01" on, "cv11" on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Ambient background — soft radial glows in corners, evokes the Sber site */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 0% 0%,    rgba(159, 102, 255, 0.18), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 0%,  rgba(63, 174, 255, 0.14),  transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(230, 97, 217, 0.10),  transparent 60%);
+}
+
+#root { position: relative; z-index: 1; }
+
+/* Base text rhythms */
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.01em; margin: 0 0 0.5em; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.05rem; }
+
+a { color: var(--accent-cyan); text-decoration: none; }
+a:hover { color: var(--accent-cyan-2); }
+
+button { font-family: inherit; }
+
+/* ---------- Reusable primitives -------------------------------------------- */
+
+/* Capsule pill — Sber's signature shape. Bright (white) variant for primary
+   actions, ghost variant for secondary. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.92rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+.pill:hover { transform: translateY(-1px); }
+.pill:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.pill--primary { background: var(--fg-primary); color: var(--fg-on-light); }
+.pill--primary:hover { background: #f0f0ff; }
+
+.pill--ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-subtle);
+}
+.pill--ghost:hover { background: rgba(255,255,255,0.1); }
+
+.pill--accent {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+  color: #fff;
+}
+
+.pill--cyan {
+  background: var(--accent-cyan);
+  color: var(--fg-on-light);
+}
+
+/* Compact chip — for badges */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.chip--gold   { background: rgba(240, 193, 75, 0.15);  color: var(--gold); }
+.chip--silver { background: rgba(196, 206, 214, 0.15); color: var(--silver); }
+.chip--bronze { background: rgba(209, 138, 82, 0.18);  color: var(--bronze); }
+.chip--cyan   { background: rgba(63, 174, 255, 0.15);  color: var(--accent-cyan); }
+.chip--purple { background: rgba(159, 102, 255, 0.15); color: var(--accent-purple); }
+.chip--muted  { background: rgba(255,255,255,0.06); color: var(--fg-secondary); }
+
+/* Card — dark glass surface */
+.card {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+/* Form inputs on dark */
+input[type="text"], input[type="email"], input[type="number"], input[type="file"], textarea, select {
+  background: var(--bg-input);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+input[type="text"]:focus, input[type="email"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(63,174,255,0.18);
+}
+
+/* Native file picker — make it match the dark theme */
+input[type="file"]::file-selector-button {
+  background: var(--fg-primary);
+  color: var(--fg-on-light);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  margin-right: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+::placeholder { color: var(--fg-tertiary); }
+
+/* Subtle helper for muted text */
+.muted { color: var(--fg-secondary); }
+.tiny  { font-size: 0.78rem; color: var(--fg-tertiary); letter-spacing: 0.04em; text-transform: uppercase; }

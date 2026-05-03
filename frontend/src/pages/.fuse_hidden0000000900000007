@@ -650,8 +650,8 @@ export default function GrandModerator() {
                     }
                     style={{
                       padding: "4px 12px",
-                      background: "var(--accent-cyan)",
-                      color: "var(--fg-on-light)",
+                      background: "#2c5282",
+                      color: "#fff",
                       border: "none",
                       borderRadius: 4,
                       cursor: "pointer",
@@ -685,8 +685,8 @@ export default function GrandModerator() {
                       disabled={busy !== null}
                       style={{
                         padding: "6px 14px",
-                        background: "var(--accent-mint)",
-                        color: "var(--fg-on-light)",
+                        background: "#2f855a",
+                        color: "#fff",
                         border: "none",
                         borderRadius: 4,
                         cursor: "pointer",

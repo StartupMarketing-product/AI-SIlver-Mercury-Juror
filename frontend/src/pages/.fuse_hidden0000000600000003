@@ -388,8 +388,8 @@ export default function GrandModerator() {
               style={{
                 width: "100%",
                 padding: "10px 12px",
-                background: busy === "render-all" ? "rgba(255,255,255,0.18)" : "var(--fg-primary)",
-                color: busy === "render-all" ? "var(--fg-secondary)" : "var(--fg-on-light)",
+                background: busy === "render-all" ? "#9ca3af" : "#1a1a1a",
+                color: "#fff",
                 border: "none",
                 borderRadius: 6,
                 cursor: busy === "render-all" ? "wait" : "pointer",
@@ -429,7 +429,7 @@ export default function GrandModerator() {
                       padding: "10px 12px",
                       border: "1px solid",
                       borderColor: active ? "var(--accent-cyan)" : "var(--border-subtle)",
-                      background: active ? "var(--bg-elev-2)" : "var(--bg-elev-1)",
+                      background: active ? "#f5f5f5" : "#fff",
                       borderRadius: 6,
                       cursor: "pointer",
                       display: "flex",
@@ -453,7 +453,7 @@ export default function GrandModerator() {
                           borderRadius: 999,
                           fontSize: "0.7rem",
                           fontWeight: 600,
-                          color: "var(--fg-on-light)",
+                          color: "#fff",
                           background: AWARD_COLOR[it.award_level],
                         }}
                       >
@@ -466,7 +466,7 @@ export default function GrandModerator() {
                           borderRadius: 999,
                           fontSize: "0.7rem",
                           fontWeight: 600,
-                          color: "var(--fg-on-light)",
+                          color: "#fff",
                           background: STATUS_COLOR[status],
                         }}
                       >
@@ -518,7 +518,7 @@ export default function GrandModerator() {
                     borderRadius: 999,
                     fontSize: "0.75rem",
                     fontWeight: 600,
-                    color: "var(--fg-on-light)",
+                    color: "#fff",
                     background: AWARD_COLOR[selected.award_level],
                   }}
                 >
@@ -531,7 +531,7 @@ export default function GrandModerator() {
                     borderRadius: 999,
                     fontSize: "0.75rem",
                     fontWeight: 600,
-                    color: "var(--fg-on-light)",
+                    color: "#fff",
                     background: STATUS_COLOR[(selected.avatar_status ?? "awaiting_review") as AvatarStatus],
                   }}
                 >
@@ -582,7 +582,7 @@ export default function GrandModerator() {
                   </div>
                 ))}
                 {richVerdict.output.l2.caps_applied && richVerdict.output.l2.caps_applied.length > 0 && (
-                  <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border-subtle)", fontSize: "0.82rem", color: "var(--fg-secondary)" }}>
+                  <div style={{ paddingTop: 10, borderTop: "1px dashed #e2e8f0", fontSize: "0.82rem", color: "var(--fg-secondary)" }}>
                     <strong>Применённые ограничения:</strong>
                     <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
                       {richVerdict.output.l2.caps_applied.map((cap, i) => (
@@ -650,8 +650,8 @@ export default function GrandModerator() {
                     }
                     style={{
                       padding: "4px 12px",
-                      background: "var(--accent-cyan)",
-                      color: "var(--fg-on-light)",
+                      background: "#2c5282",
+                      color: "#fff",
                       border: "none",
                       borderRadius: 4,
                       cursor: "pointer",
@@ -685,8 +685,8 @@ export default function GrandModerator() {
                       disabled={busy !== null}
                       style={{
                         padding: "6px 14px",
-                        background: "var(--accent-mint)",
-                        color: "var(--fg-on-light)",
+                        background: "#2f855a",
+                        color: "#fff",
                         border: "none",
                         borderRadius: 4,
                         cursor: "pointer",
@@ -699,7 +699,7 @@ export default function GrandModerator() {
                       disabled={busy !== null}
                       style={{
                         padding: "6px 14px",
-                        background: "var(--bg-elev-2)",
+                        background: "#e2e8f0",
                         color: "var(--fg-primary)",
                         border: "none",
                         borderRadius: 4,
@@ -728,8 +728,8 @@ export default function GrandModerator() {
                 }
                 style={{
                   padding: "10px 20px",
-                  background: "var(--fg-primary)",
-                  color: "var(--fg-on-light)",
+                  background: "#1a1a1a",
+                  color: "#fff",
                   border: "none",
                   borderRadius: 6,
                   cursor: busy !== null ? "default" : "pointer",

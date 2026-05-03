@@ -208,9 +208,9 @@ export default function Moderator() {
                   gap: 14,
                   padding: "18px 20px",
                   border: "1px solid",
-                  borderColor: played ? "var(--border-strong)" : "var(--border-subtle)",
+                  borderColor: played ? "#cbd5e0" : "#e2e8f0",
                   borderRadius: 8,
-                  background: played ? "var(--bg-elev-2)" : "var(--bg-elev-1)",
+                  background: played ? "#fafbfc" : "#fff",
                 }}
               >
                 {/* Top row: project + button (or "Воспроизведено" tag) */}
@@ -236,7 +236,7 @@ export default function Moderator() {
                             borderRadius: 999,
                             fontSize: "0.8rem",
                             fontWeight: 600,
-                            color: "var(--fg-on-light)",
+                            color: "#fff",
                             background: AWARD_COLOR[verdict.award_level],
                           }}
                         >

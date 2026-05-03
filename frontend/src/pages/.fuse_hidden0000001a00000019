@@ -180,7 +180,7 @@ export default function Moderator() {
           style={{
             background: "rgba(255,107,107,0.10)",
             border: "1px solid rgba(255,107,107,0.45)",
-            color: "#ff6b6b",
+            color: "#c53030",
             padding: "10px 14px",
             borderRadius: 6,
             marginBottom: 16,
@@ -208,9 +208,9 @@ export default function Moderator() {
                   gap: 14,
                   padding: "18px 20px",
                   border: "1px solid",
-                  borderColor: played ? "var(--border-strong)" : "var(--border-subtle)",
+                  borderColor: played ? "#cbd5e0" : "#e2e8f0",
                   borderRadius: 8,
-                  background: played ? "var(--bg-elev-2)" : "var(--bg-elev-1)",
+                  background: played ? "#fafbfc" : "#fff",
                 }}
               >
                 {/* Top row: project + button (or "Воспроизведено" tag) */}
@@ -236,7 +236,7 @@ export default function Moderator() {
                             borderRadius: 999,
                             fontSize: "0.8rem",
                             fontWeight: 600,
-                            color: "var(--fg-on-light)",
+                            color: "#fff",
                             background: AWARD_COLOR[verdict.award_level],
                           }}
                         >
@@ -254,8 +254,8 @@ export default function Moderator() {
                       onClick={() => activate(row)}
                       style={{
                         padding: "12px 22px",
-                        background: "var(--fg-primary)",
-                        color: "var(--fg-on-light)",
+                        background: "#1a1a1a",
+                        color: "#fff",
                         border: "none",
                         borderRadius: 6,
                         cursor: "pointer",

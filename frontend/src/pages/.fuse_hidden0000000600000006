@@ -210,7 +210,7 @@ export default function Moderator() {
                   border: "1px solid",
                   borderColor: played ? "var(--border-strong)" : "var(--border-subtle)",
                   borderRadius: 8,
-                  background: played ? "var(--bg-elev-2)" : "var(--bg-elev-1)",
+                  background: played ? "#fafbfc" : "#fff",
                 }}
               >
                 {/* Top row: project + button (or "Воспроизведено" tag) */}
