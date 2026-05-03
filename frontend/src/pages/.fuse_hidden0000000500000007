@@ -320,11 +320,11 @@ export default function GrandModerator() {
             style={{
               marginBottom: 10,
               padding: "10px 12px",
-              border: "1px solid rgba(240,193,75,0.45)",
+              border: "1px solid #f6e05e",
               background: "rgba(240,193,75,0.10)",
               borderRadius: 6,
               fontSize: "0.85rem",
-              color: "#f0c14b",
+              color: "#7b6107",
               display: "flex",
               alignItems: "center",
               gap: 10,
@@ -602,8 +602,8 @@ export default function GrandModerator() {
               <div
                 style={{
                   background: "rgba(240,193,75,0.10)",
-                  border: "1px solid rgba(240,193,75,0.45)",
-                  color: "#f0c14b",
+                  border: "1px solid #f6e05e",
+                  color: "#7b6107",
                   padding: "10px 14px",
                   borderRadius: 6,
                   fontSize: "0.88rem",
