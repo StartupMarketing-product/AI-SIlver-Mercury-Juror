@@ -98,7 +98,8 @@ export default function GrandModerator() {
   const [items, setItems] = useState<CaseRow[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ id: string; speech: string } | null>(null);
-  const [busy, setBusy] = useState<null | "upload" | "save" | "approve">(null);
+  const [busy, setBusy] = useState<null | "upload" | "save" | "approve" | "render-all">(null);
+  const [renderAllStatus, setRenderAllStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -179,9 +180,19 @@ export default function GrandModerator() {
       const total = Number(body.queued ?? body.imported ?? 0);
       setExpectedTotal(total > 0 ? total : null);
       setImportedAt(Date.now());
-      setUploadStatus(
-        `Загружено ${body.imported ?? "?"} кейсов. Запущена оценка ${body.queued ?? "?"} кейсов.`
-      );
+      // Show full diagnostic when nothing imported — helps debug bad files /
+      // missing nominations / schema mismatches.
+      const parts: string[] = [
+        `Загружено ${body.imported ?? "?"} кейсов`,
+        `Запущена оценка ${body.queued ?? "?"} кейсов`,
+      ];
+      if (typeof body.scanned === "number") parts.push(`просмотрено ${body.scanned}`);
+      if (body.skipped_not_in_target) parts.push(`не в целевых номинациях: ${body.skipped_not_in_target}`);
+      if (body.skipped_existing) parts.push(`уже существуют: ${body.skipped_existing}`);
+      if (Array.isArray(body.errors) && body.errors.length > 0) {
+        parts.push(`ошибки (${body.errors.length}): ${body.errors.slice(0, 3).map((e: any) => e.error).join("; ")}`);
+      }
+      setUploadStatus(parts.join(" · "));
       reload();
     } catch (e) {
       setError(`Ошибка загрузки: ${(e as Error).message}`);
@@ -231,6 +242,41 @@ export default function GrandModerator() {
       reload();
     } catch (e) {
       setError(`Не удалось запустить рендер: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // Bulk-render: kick HeyGen on every verdict that has a non-empty speech
+  // and isn't already rendering / ready. The endpoint returns immediately
+  // with the count; the per-row badges then update via the 5s reload poll.
+  async function handleRenderAll() {
+    const eligibleCount = items?.filter(
+      (i) => i.avatar_script && i.avatar_script.trim() && i.avatar_status !== "rendering" && i.avatar_status !== "ready"
+    ).length ?? 0;
+    if (eligibleCount === 0) {
+      setRenderAllStatus("Нет кейсов для рендера (все уже в работе или готовы).");
+      return;
+    }
+    if (!window.confirm(
+      `Запустить рендер ${eligibleCount} видео в HeyGen? Это потратит кредиты HeyGen и займёт несколько минут.`
+    )) return;
+    setBusy("render-all");
+    setError(null);
+    setRenderAllStatus(null);
+    try {
+      const res = await apiFetch(`${base}/api/admin/render-all`, { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const parts = [body?.error, body?.detail].filter(Boolean).join(" — ");
+        throw new Error(parts || `HTTP ${res.status}`);
+      }
+      setRenderAllStatus(
+        `Запущено ${body.queued ?? "?"} рендеров. Уже в работе или готовы: ${body.already_rendering_or_ready ?? 0}.`
+      );
+      reload();
+    } catch (e) {
+      setError(`Не удалось запустить массовый рендер: ${(e as Error).message}`);
     } finally {
       setBusy(null);
     }
@@ -332,6 +378,34 @@ export default function GrandModerator() {
               ✓ Готово. Оценено {items.length} кейсов.
             </div>
           )}
+
+        {/* Bulk render — only show when there's at least one case to render. */}
+        {items && items.length > 0 && (
+          <div style={{ marginBottom: 10 }}>
+            <button
+              onClick={handleRenderAll}
+              disabled={busy === "render-all"}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                background: busy === "render-all" ? "#9ca3af" : "#1a1a1a",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                cursor: busy === "render-all" ? "wait" : "pointer",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+              }}
+            >
+              {busy === "render-all" ? "Запускаем рендер…" : "Записать все видео"}
+            </button>
+            {renderAllStatus && (
+              <div style={{ marginTop: 6, fontSize: "0.78rem", color: "#22543d" }}>
+                {renderAllStatus}
+              </div>
+            )}
+          </div>
+        )}
 
         {!items ? (
           <p>Загрузка…</p>

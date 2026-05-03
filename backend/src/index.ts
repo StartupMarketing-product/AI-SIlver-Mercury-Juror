@@ -514,6 +514,74 @@ app.post("/api/admin/cases/:id/approve-and-render", moderatorAuth, async (req, r
   }
 });
 
+/**
+ * POST /api/admin/render-all
+ * Kicks off HeyGen renders for every verdict that has a non-empty avatar_script
+ * and isn't already rendering / ready. Fire-and-forget — returns immediately
+ * with a count of how many were queued; the background poller surfaces results
+ * as videos finish. Use this from the Grand Moderator screen to avoid clicking
+ * "Запустить рендер" on each row individually.
+ */
+app.post("/api/admin/render-all", moderatorAuth, async (_req, res) => {
+  try {
+    const all = await listVerdicts({ limit: 1000 });
+    // Eligible: has a non-empty script, not already in flight or finished.
+    const eligible = all.filter(
+      (v) =>
+        v.avatar_script &&
+        v.avatar_script.trim().length > 0 &&
+        v.avatar_status !== "rendering" &&
+        v.avatar_status !== "ready"
+    );
+
+    // Respond immediately — the loop runs in the background. Each HeyGen
+    // submission takes ~1s, so 50 cases take ~1 minute; we don't want to
+    // block the Grand Moderator's browser for that.
+    res.json({
+      ok: true,
+      total_verdicts: all.length,
+      queued: eligible.length,
+      already_rendering_or_ready: all.length - eligible.length,
+    });
+
+    setImmediate(async () => {
+      let succeeded = 0;
+      let failed = 0;
+      for (const v of eligible) {
+        try {
+          await setVerdictApprovedForRender(v.evaluation_id);
+          const videoId = await heygenCreateVideo(v.avatar_script as string);
+          await setVerdictAvatarVideo(v.evaluation_id, {
+            status: "rendering",
+            video_id: videoId,
+            error: null,
+          });
+          await appendAuditLog({
+            action: "verdict.approved_for_render",
+            entity_type: "verdict",
+            entity_id: v.evaluation_id,
+            actor_role: "moderator",
+            details: { case_id: v.case_id, heygen_video_id: videoId, source: "render-all" },
+          });
+          succeeded++;
+        } catch (e) {
+          const msg = String((e as Error).message);
+          console.warn(`[admin/render-all] failed for verdict ${v.evaluation_id}: ${msg}`);
+          await setVerdictAvatarVideo(v.evaluation_id, {
+            status: "failed",
+            video_id: null,
+            error: msg,
+          }).catch(() => { /* swallow secondary failure */ });
+          failed++;
+        }
+      }
+      console.log(`[admin/render-all] done: ${succeeded} queued, ${failed} failed`);
+    });
+  } catch (err) {
+    res.status(500).json({ error: "render-all failed", detail: String((err as Error).message) });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Background poller: every 30s, check all verdicts in 'rendering' state and
 // pull their HeyGen status. When a render completes, save the URL and flip
