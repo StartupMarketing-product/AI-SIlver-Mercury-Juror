@@ -102,6 +102,7 @@ export default function GrandModerator() {
   const [renderAllStatus, setRenderAllStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   // Tracks how many cases the most recent import dispatched for scoring.
   // We compare against items.length to show progress until all cases land.
@@ -295,6 +296,9 @@ export default function GrandModerator() {
           <div style={{ fontSize: "0.85rem", marginBottom: 8, color: "var(--fg-secondary)" }}>
             Загрузка JSON со всеми заявками сезона
           </div>
+          {/* Hidden native input — proxied by a custom Russian button so the
+              browser's locale-dependent "Choose file" / "No file chosen"
+              labels don't bleed into the UI. */}
           <input
             ref={fileRef}
             type="file"
@@ -302,10 +306,27 @@ export default function GrandModerator() {
             disabled={busy !== null}
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) handleUpload(f);
+              if (f) {
+                setSelectedFileName(f.name);
+                handleUpload(f);
+              }
             }}
-            style={{ fontSize: "0.85rem" }}
+            style={{ display: "none" }}
           />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={busy !== null}
+              className="pill pill--primary"
+              style={{ padding: "8px 16px", fontSize: "0.85rem" }}
+            >
+              Выбрать файл
+            </button>
+            <span style={{ fontSize: "0.82rem", color: "var(--fg-tertiary)" }}>
+              {selectedFileName ?? "Файл не выбран"}
+            </span>
+          </div>
           {uploadStatus && (
             <div style={{ marginTop: 8, fontSize: "0.8rem", color: "#2f855a" }}>{uploadStatus}</div>
           )}
