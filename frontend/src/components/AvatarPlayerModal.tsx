@@ -83,30 +83,83 @@ export default function AvatarPlayerModal({
   scoreboard,
   onClose,
 }: Props) {
-  const [stage, setStage] = useState<"messages" | "video" | "fallback">("messages");
+  // Stage flow: cinematic intro (two text moments + audio sting) → messages
+  // theatre → video. Intro can be skipped via the SHOW_INTRO flag below.
+  type Stage = "intro-1" | "intro-2" | "messages" | "video" | "fallback";
+  const SHOW_INTRO = true;
+  const INTRO_BEAT_MS = 2500; // each title beat
+  const SKIP_MESSAGES_AFTER_INTRO = true; // dissolve straight into the verdict
+
+  const [stage, setStage] = useState<Stage>(SHOW_INTRO ? "intro-1" : "messages");
   const [messageIdx, setMessageIdx] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // When opening, reset to first stage and cycle messages, then transition.
+  // When opening, reset to first stage and run the timeline.
   useEffect(() => {
     if (!open) return;
-    setStage("messages");
+    setStage(SHOW_INTRO ? "intro-1" : "messages");
     setMessageIdx(0);
 
-    const cycle = setInterval(() => {
-      setMessageIdx((prev) => {
-        const next = prev + 1;
-        if (next >= STAGED_MESSAGES_RU.length) {
-          clearInterval(cycle);
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    if (SHOW_INTRO) {
+      // Try to play the intro audio. autoplay-with-sound may be blocked, in
+      // which case the intro plays silent — text animations carry the moment.
+      const a = audioRef.current;
+      if (a) {
+        a.currentTime = 0;
+        a.volume = 0.85;
+        a.play().catch(() => {
+          a.muted = true;
+          a.play().catch(() => { /* fully blocked — silent intro */ });
+        });
+      }
+      // Beat 1 → Beat 2 → next stage
+      timeouts.push(setTimeout(() => setStage("intro-2"), INTRO_BEAT_MS));
+      timeouts.push(setTimeout(() => {
+        // Cross-fade the audio out as the avatar starts speaking.
+        const a2 = audioRef.current;
+        if (a2) {
+          let v = a2.volume;
+          const fade = setInterval(() => {
+            v = Math.max(0, v - 0.08);
+            a2.volume = v;
+            if (v <= 0.01) { clearInterval(fade); a2.pause(); }
+          }, 80);
+        }
+        if (SKIP_MESSAGES_AFTER_INTRO) {
           if (videoUrl) setStage("video");
           else setStage("fallback");
-          return prev;
+        } else {
+          setStage("messages");
         }
-        return next;
-      });
-    }, STAGE_DURATION_MS);
+      }, INTRO_BEAT_MS * 2));
+    }
 
-    return () => clearInterval(cycle);
+    if (!SHOW_INTRO || !SKIP_MESSAGES_AFTER_INTRO) {
+      // Staged messages theatre cycles when active.
+      const cycle = setInterval(() => {
+        setStage((s) => {
+          if (s !== "messages") return s;
+          setMessageIdx((prev) => {
+            const next = prev + 1;
+            if (next >= STAGED_MESSAGES_RU.length) {
+              clearInterval(cycle);
+              if (videoUrl) setStage("video");
+              else setStage("fallback");
+              return prev;
+            }
+            return next;
+          });
+          return s;
+        });
+      }, STAGE_DURATION_MS);
+      timeouts.push(cycle as unknown as ReturnType<typeof setTimeout>);
+      return () => timeouts.forEach(clearTimeout);
+    }
+
+    return () => timeouts.forEach(clearTimeout);
   }, [open, videoUrl]);
 
   // Try to autoplay video once stage flips to "video"
@@ -168,7 +221,31 @@ export default function AvatarPlayerModal({
           from { transform: scaleX(0); }
           to { transform: scaleX(1); }
         }
+        /* Cinematic intro — title scales up + glow swells, holds, fades out.
+           Timed to 2.5s. Tweak %s if your audio sting peaks at a different beat. */
+        @keyframes intro-title {
+          0%   { opacity: 0; transform: scale(1.18); letter-spacing: 0.30em; filter: blur(8px); }
+          22%  { opacity: 1; transform: scale(1.00); letter-spacing: 0.18em; filter: blur(0); }
+          74%  { opacity: 1; transform: scale(1.02); letter-spacing: 0.20em; filter: blur(0); }
+          100% { opacity: 0; transform: scale(0.96); letter-spacing: 0.18em; filter: blur(6px); }
+        }
+        @keyframes intro-glow {
+          0%   { transform: scale(0.4); opacity: 0; }
+          30%  { transform: scale(1);   opacity: 0.55; }
+          70%  { transform: scale(1.4); opacity: 0.4;  }
+          100% { transform: scale(2);   opacity: 0;    }
+        }
+        @keyframes intro-orb {
+          0%   { transform: scale(0.2) rotate(0deg);   opacity: 0; }
+          25%  { transform: scale(1)   rotate(120deg); opacity: 1; }
+          85%  { transform: scale(1.1) rotate(360deg); opacity: 0.85; }
+          100% { transform: scale(1.4) rotate(440deg); opacity: 0; }
+        }
       `}</style>
+
+      {/* Cinematic intro audio — sits as a hidden element so the same single
+          MP3 can be reused on every modal open without re-fetching. */}
+      <audio ref={audioRef} src="/intro.mp3" preload="auto" />
 
       <button
         onClick={onClose}
@@ -188,6 +265,11 @@ export default function AvatarPlayerModal({
       >
         Закрыть · Esc
       </button>
+
+      {/* Stage: cinematic intro — two title beats with audio sting. */}
+      {(stage === "intro-1" || stage === "intro-2") && (
+        <IntroStage stage={stage} />
+      )}
 
       {projectName && stage === "messages" && (
         <div
@@ -328,6 +410,77 @@ export default function AvatarPlayerModal({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Cinematic intro: two title beats with a glowing orb behind the text and
+ *  the audio sting playing from the parent <audio> element. The glow + orb +
+ *  blur entrances give the dramatic "movie studio reveal" the user asked for. */
+function IntroStage({ stage }: { stage: "intro-1" | "intro-2" }) {
+  const isFirst = stage === "intro-1";
+  const titleRu = isFirst ? "Сделано Сбермаркетингом" : "Оценка кейса ИИ";
+  const accent = isFirst ? "#3FAEFF" : "#9F66FF";
+  const accent2 = isFirst ? "#9F66FF" : "#E661D9";
+  return (
+    <div
+      key={stage} // forcing remount so animations restart cleanly between beats
+      style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 32,
+        zIndex: 2,
+      }}
+    >
+      {/* Conic-gradient orb behind the title — Sber-style spinning rainbow disc */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          width: 220,
+          height: 220,
+          borderRadius: "50%",
+          background: `conic-gradient(from 0deg, ${accent}, ${accent2}, ${accent})`,
+          filter: "blur(2px)",
+          animation: "intro-orb 2500ms ease-in-out forwards",
+          opacity: 0,
+          zIndex: -1,
+        }}
+      />
+      {/* Soft radial glow that breathes outwards */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          width: 600,
+          height: 600,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${accent}55 0%, transparent 60%)`,
+          animation: "intro-glow 2500ms ease-out forwards",
+          opacity: 0,
+          zIndex: -2,
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          color: "#fff",
+          fontSize: "clamp(2rem, 5.5vw, 4rem)",
+          fontWeight: 800,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          textAlign: "center",
+          maxWidth: "85vw",
+          lineHeight: 1.05,
+          textShadow: `0 0 28px ${accent}88, 0 0 60px ${accent2}44`,
+          animation: "intro-title 2500ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards",
+        }}
+      >
+        {titleRu}
+      </div>
     </div>
   );
 }

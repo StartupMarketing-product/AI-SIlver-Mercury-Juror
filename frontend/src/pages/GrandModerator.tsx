@@ -4,6 +4,10 @@ import { apiFetch } from "../lib/auth";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
 
+// Feature flag: hide / show the "Записать выступления для всех кейсов" bulk-render button.
+// Flip to `true` to bring the button back. Handler, state, and backend route remain wired up.
+const SHOW_RENDER_ALL = false;
+
 type AwardLevel = "gold" | "silver" | "bronze" | "shortlist" | "longlist";
 
 type AvatarStatus =
@@ -400,8 +404,10 @@ export default function GrandModerator() {
             </div>
           )}
 
-        {/* Bulk render — only show when there's at least one case to render. */}
-        {items && items.length > 0 && (
+        {/* Bulk render — only show when there's at least one case to render.
+            Temporarily hidden behind SHOW_RENDER_ALL — flip to true to restore.
+            All handler logic + backend endpoint left intact for one-line revival. */}
+        {SHOW_RENDER_ALL && items && items.length > 0 && (
           <div style={{ marginBottom: 10 }}>
             <button
               onClick={handleRenderAll}
