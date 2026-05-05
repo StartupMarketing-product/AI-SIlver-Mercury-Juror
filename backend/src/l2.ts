@@ -118,8 +118,18 @@ const HOSTILE_PERSONA = `
     привязывайся к якорям.
   • Маркетинговый жаргон без цифр ("уникальный", "беспрецедентный", "вирусный",
     "успешный") = балл 1–3 на критерии "результаты".
-  • Конкретные числа + сравнение (vs прошлый период / рынок / цель) +
-    атрибуция = балл 6+. Если ещё и оригинальная идея — балл 8+.
+  • Конкретные числа + ЛЮБОЕ корректное сравнение + атрибуция = балл 6+.
+    Если ещё и оригинальная идея — балл 8+.
+    Корректным сравнением считается ЛЮБОЕ из:
+      — vs прошлый период (YoY) — когда продукт/инструмент существовал ранее;
+      — vs рыночный бенчмарк / средний по индустрии;
+      — vs поставленная цель (план/KPI);
+      — vs контрольная группа (A/B-тест);
+      — vs аналогичный кейс / прямой конкурент.
+    Если кейс — это запуск нового продукта или первое применение нового
+    инструмента, то YoY-сравнение НЕ ТРЕБУЕТСЯ — это нормально.
+    В таких случаях достаточно сравнения с целью, рынком или контрольной
+    группой. Не штрафуй кейс за отсутствие YoY, если YoY невозможен по сути.
 `.trim();
 
 const ANTI_SYCOPHANCY_RULES = `
@@ -143,9 +153,18 @@ const ANTI_SYCOPHANCY_RULES = `
    общих фраз без цифр.
 
 4. EVIDENCE_GRADE — флаги true ТОЛЬКО при реальном отсутствии данных:
-     • no_baseline=true → нет ни одного сравнения (vs прошлый период / рынок / цель).
+     • no_baseline=true → нет НИ ОДНОГО корректного сравнения (vs прошлый период,
+       vs рынок, vs цель/KPI, vs контрольная группа, vs прямой конкурент).
      • no_causality=true → результат мог быть достигнут и без этой кампании.
      • no_attribution=true → результат относится к нескольким активностям сразу.
+
+   ВАЖНО: baseline_not_applicable=true → ставь, если YoY-сравнение
+   некорректно по существу (новый продукт без истории, первое применение
+   инструмента, разовый запуск, новая категория). В этом случае
+   обязательно укажи baseline_not_applicable_reason — конкретно, почему
+   YoY не применимо. Тогда no_baseline-потолок не действует, но другие
+   формы сравнения (vs цель / рынок / контроль) всё равно требуются.
+
    "На всякий случай" не ставь — флаги применяют жёсткие потолки на балл.
 
 5. why_not_higher_band и why_not_higher_band_overall — конкретно, какого
@@ -330,7 +349,12 @@ function applyEvidenceGradeCaps(
       cap = EVIDENCE_GRADE_CAPS.no_attribution;
       reason = "no_attribution";
     }
-    if (grade.no_baseline && EVIDENCE_GRADE_CAPS.no_baseline < cap) {
+    // no_baseline cap is bypassed when the model has flagged that a YoY
+    // comparison genuinely doesn't apply (novel product / first-of-kind
+    // instrument / one-off launch). The bypass requires a non-empty reason
+    // string so the override is auditable in the verdict record.
+    const baselineNa = grade.baseline_not_applicable && (grade.baseline_not_applicable_reason || "").trim().length >= 10;
+    if (grade.no_baseline && !baselineNa && EVIDENCE_GRADE_CAPS.no_baseline < cap) {
       cap = EVIDENCE_GRADE_CAPS.no_baseline;
       reason = "no_baseline";
     }
@@ -456,9 +480,17 @@ ${ANTI_SYCOPHANCY_RULES}
 верни пустой массив и снизь балл до ≤4.
 
 Дополнительно оцени качество доказательной базы по результатам:
-- no_baseline: true, если нет базы для сравнения (до/после, контрольная группа).
+- no_baseline: true, если НИ ОДНО корректное сравнение не приведено
+  (vs прошлый период, vs рынок, vs цель/KPI, vs контрольная группа).
 - no_causality: true, если нет причинно-следственной связи между активностью и результатом.
 - no_attribution: true, если результат нельзя однозначно отнести именно к этому проекту.
+- baseline_not_applicable: true, если YoY-сравнение некорректно по существу
+  (запуск нового продукта без истории, первое применение инструмента,
+  разовая акция, новая категория). Обязательно укажи
+  baseline_not_applicable_reason — одно предложение с фактом из кейса,
+  объясняющим, почему сравнение с прошлым периодом не применимо.
+  В этом случае no_baseline можно оставить false, если приведены другие
+  формы сравнения (vs цель / рынок / контроль).
 
 one_paragraph_verdict: 2–3 предложения. Сначала вердикт (медаль), затем
 главная причина — конкретно. Без вступлений типа "в целом" или "проект
@@ -478,7 +510,7 @@ one_paragraph_verdict: 2–3 предложения. Сначала вердик
     "fatal_flaws": ["флоу 1", "флоу 2"]
   }],
   ${isSocial ? '"social_outcomes_score": 1-10, "social_outcomes_rationale": "...",' : ""}
-  "evidence_grade": {"no_baseline": bool, "no_causality": bool, "no_attribution": bool, "rationale": "..."},
+  "evidence_grade": {"no_baseline": bool, "no_causality": bool, "no_attribution": bool, "baseline_not_applicable": bool, "baseline_not_applicable_reason": "...", "rationale": "..."},
   "one_paragraph_verdict": "...",
   "case_fatal_flaw": "одно предложение — главный дефект кейса",
   "why_not_higher_band_overall": "почему этот кейс не заслуживает следующей медали"

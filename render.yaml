@@ -32,6 +32,8 @@ services:
         sync: false
       - key: HEYGEN_VOICE_ID
         sync: false
+      - key: HEYGEN_CHARACTER_TYPE
+        sync: false   # "avatar" (Studio) or "talking_photo" (Photo Avatar / Avatar IV); auto-fallback if wrong
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY

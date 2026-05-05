@@ -29,9 +29,22 @@ export const EvidenceGradeSchema = z
     no_baseline: z.boolean().default(false),
     no_causality: z.boolean().default(false),
     no_attribution: z.boolean().default(false),
+    /**
+     * Model flags that a YoY / prior-period baseline is genuinely *not applicable*
+     * to this case — brand-new product, first-of-kind instrument, one-off launch,
+     * category that didn't exist before. When TRUE, the no_baseline cap is BYPASSED.
+     * Must be paired with `baseline_not_applicable_reason` so the override is auditable.
+     */
+    baseline_not_applicable: z.boolean().default(false),
+    baseline_not_applicable_reason: z.string().optional(),
     rationale: z.string().optional(),
   })
-  .default({ no_baseline: false, no_causality: false, no_attribution: false });
+  .default({
+    no_baseline: false,
+    no_causality: false,
+    no_attribution: false,
+    baseline_not_applicable: false,
+  });
 
 /** Phase 5: structured avatar script. Enforces a 60–90s short version with
  *  explicit sections (hook → verdict → steelman → fatal flaw → close) plus a

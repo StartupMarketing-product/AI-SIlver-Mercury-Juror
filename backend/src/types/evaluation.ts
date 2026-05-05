@@ -26,6 +26,10 @@ export interface EvidenceGrade {
   no_baseline: boolean;
   no_causality: boolean;
   no_attribution: boolean;
+  /** When true, no_baseline cap is bypassed because YoY comparison genuinely
+   *  doesn't apply (novel product / first-of-kind instrument / one-off launch). */
+  baseline_not_applicable?: boolean;
+  baseline_not_applicable_reason?: string;
   rationale?: string;
 }
 
