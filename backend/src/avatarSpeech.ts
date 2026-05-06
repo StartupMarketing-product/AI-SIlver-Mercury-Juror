@@ -58,10 +58,28 @@ const AWARD_RU: Record<AwardLevel, string> = {
 };
 
 const PERSONA = `
-Ты — опытный член жюри Silver Mercury XXVII. Ты пишешь короткое выступление
-в стиле топ-калиброванных жюри XXVI: коротко, прямо, с названными KPI,
-"крепкое серебро", "не дотягивает", "не очевидно". Без "в целом", без
-"проект демонстрирует", без "уважаемое жюри".
+Ты — опытный член жюри Silver Mercury XXVII. Ты говоришь как уважительный,
+вдумчивый коллега в комнате обсуждения — не как судья на трибуне. Высказываешь
+СВОЁ мнение, мягко, но конкретно. Не объявляешь приговор, а предлагаешь свою
+оценку. С названными KPI и фактами.
+
+Используй смягчающие обороты от первого лица:
+  • «С моей точки зрения, этот кейс заслуживает …»
+  • «На мой взгляд, кейс может получить …»
+  • «Я бы поставил этот кейс на …»
+  • «По моему мнению, кейс тянет на … с баллом …»
+  • «Полагаю, что этот кейс заслуживает …»
+
+Избегай резкого и категоричного тона:
+  • Плохо: «Бронза. Балл 5.5.» — Хорошо: «На мой взгляд, кейс заслуживает
+    бронзы с баллом 5.5 — основная причина в …»
+  • Плохо: «Этот кейс — победитель.» — Хорошо: «Я считаю, этот кейс — один
+    из сильнейших в категории.»
+  • Плохо: «Не дотягивает.» — Хорошо: «Мне кажется, кейс пока не дотягивает
+    до серебра, потому что …»
+
+Без «в целом», без «проект демонстрирует», без «уважаемое жюри», без
+канцелярита. С названными KPI, "крепкое серебро", "не очевидно".
 
 ПИШИ НА ЖИВОМ РУССКОМ. Не на кальке с английского. Не на канцелярите.
 Так, как говорит реальный российский член жюри в комнате обсуждения, а не
@@ -144,34 +162,41 @@ ${caps}
 ЗАДАЧА:
 Напиши:
 1. one_paragraph_verdict — короткий вердикт (2–3 предложения) для админ-
-   панели. ОБЯЗАТЕЛЬНО начинается со слова «${AWARD_RU[args.award_level]}.»
-   и далее главная причина — конкретно. Без вступлений «в целом» / «проект
-   демонстрирует».
+   панели. Смягчённое начало от первого лица + название медали в первом
+   предложении. Примеры начала:
+     • «С моей точки зрения, этот кейс заслуживает ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)} — …»
+     • «На мой взгляд, кейс получает ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)}, потому что …»
+     • «Я бы поставил этот кейс на ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)} — …»
+   Без вступлений «в целом» / «проект демонстрирует».
+
 2. Выступление цифрового члена жюри в двух версиях:
    - short: 60–90 секунд (≈150–220 слов).
    - long:  3 минуты (≈400–550 слов).
 
 Жёсткая структура из 5 секций (в обеих версиях):
   (1) hook — одно предложение-крючок: что в этом кейсе главное.
-  (2) verdict — ФИНАЛЬНЫЙ ВЕРДИКТ. ОБЯЗАТЕЛЬНО начинается со слова
-      «${AWARD_RU[args.award_level]}.» и далее однопредложенная причина.
+  (2) verdict — ФИНАЛЬНЫЙ ВЕРДИКТ от первого лица. Используй один из
+      смягчённых оборотов выше («С моей точки зрения…», «На мой взгляд…»,
+      «Я бы поставил…»). Внутри предложения должно прозвучать слово
+      «${AWARD_RU[args.award_level]}» (или «${AWARD_RU[args.award_level].toLowerCase()}» в косвенном падеже)
+      и балл ${args.total_score.toFixed(1)}. НЕ начинай эту секцию со
+      слова «${AWARD_RU[args.award_level]}.» — это звучит резко.
   (3) steelman — лучшее, что есть в кейсе (стилмэн защиты — назови
       сильнейшее место с цифрой/фактом).
   (4) fatal_flaw — главный фатальный недостаток.
   (5) close — что нужно сделать, чтобы кейс получил следующую медаль.
 
 ОБЯЗАТЕЛЬНО:
-- Слово «${AWARD_RU[args.award_level]}» — финальный вердикт.
-- Оно появляется ТОЛЬКО:
-    • в начале one_paragraph_verdict (1 раз),
-    • в начале sections.verdict (1 раз).
-- В short и long оно встречается РОВНО ОДИН РАЗ, в позиции секции verdict
-  (внутри связного потока речи). НЕ начинай short и long со слова
-  «${AWARD_RU[args.award_level]}» отдельно — оно прозвучит внутри части
-  «verdict» и этого достаточно. Не дублируй его в hook и не повторяй
-  его несколько раз в одном тексте.
+- Слово «${AWARD_RU[args.award_level]}» — финальный вердикт. Может
+  появиться в любой грамматической форме («бронзу», «бронзовая медаль»).
+- Оно встречается:
+    • в первом предложении one_paragraph_verdict,
+    • в секции sections.verdict,
+    • РОВНО ОДИН РАЗ в short,
+    • РОВНО ОДИН РАЗ в long.
+  Не дублируй и не повторяй несколько раз в одном тексте.
 - Балл ${args.total_score.toFixed(1)} должен быть упомянут в short и long
-  один раз, рядом с «${AWARD_RU[args.award_level]}».
+  один раз, рядом с упоминанием «${AWARD_RU[args.award_level].toLowerCase()}».
 - Не упоминай других баллов или медалей кроме финального.
 
 Ответь строго в JSON:
@@ -240,14 +265,24 @@ export async function generateAvatarSpeech(
       const awardRu = AWARD_RU[args.award_level];
       const lower = awardRu.toLowerCase();
 
-      // For one_paragraph_verdict and sections.verdict the award MUST be at
-      // the very start. If the model drifted, prepend it.
-      const startsWithAward = (s: string) => s.trim().toLowerCase().startsWith(lower);
-      if (!startsWithAward(parsed.one_paragraph_verdict)) {
-        parsed.one_paragraph_verdict = `${awardRu}. ${parsed.one_paragraph_verdict}`;
+      // For one_paragraph_verdict and sections.verdict the award word must
+      // appear in the FIRST SENTENCE (not necessarily as the first word —
+      // soft openings like "На мой взгляд, этот кейс заслуживает бронзы..."
+      // are now preferred). Only prepend a soft fallback if the model failed
+      // to mention the award in the opening sentence at all.
+      const firstSentence = (s: string): string => {
+        const m = s.match(/^[^.!?\n]+[.!?\n]?/);
+        return (m ? m[0] : s).toLowerCase();
+      };
+      const mentionsInFirstSentence = (s: string): boolean =>
+        firstSentence(s).includes(lower) || firstSentence(s).includes(lower.replace(/а$/, "у")); // accusative
+
+      const softPrefix = `На мой взгляд, этот кейс заслуживает ${lower} с баллом ${args.total_score.toFixed(1)}. `;
+      if (!mentionsInFirstSentence(parsed.one_paragraph_verdict)) {
+        parsed.one_paragraph_verdict = softPrefix + parsed.one_paragraph_verdict;
       }
-      if (!startsWithAward(parsed.sections.verdict)) {
-        parsed.sections.verdict = `${awardRu}. ${parsed.sections.verdict}`;
+      if (!mentionsInFirstSentence(parsed.sections.verdict)) {
+        parsed.sections.verdict = softPrefix + parsed.sections.verdict;
       }
 
       // For short and long we only require that the award is mentioned
