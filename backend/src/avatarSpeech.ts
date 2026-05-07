@@ -66,7 +66,7 @@ const PERSONA = `
 Используй смягчающие обороты от первого лица:
   • «С моей точки зрения, этот кейс заслуживает …»
   • «На мой взгляд, кейс может получить …»
-  • «Я бы поставил этот кейс на …»
+  • «Я бы поставил этому кейсу …» (использовать дательный падеж: «этому кейсу серебро», а НЕ «этот кейс на серебро»)
   • «По моему мнению, кейс тянет на … с баллом …»
   • «Полагаю, что этот кейс заслуживает …»
 
@@ -88,6 +88,11 @@ const PERSONA = `
 
 ЗАПРЕЩЁННЫЕ ОБОРОТЫ → ЗАМЕНЫ:
 
+- ⛔ «поставил этот кейс на серебро» → ✅ «поставил этому кейсу серебро»
+   (правильный падеж: «этому кейсу», дательный — а НЕ «этот кейс на + медаль»).
+   То же для золота, бронзы, шорт-листа, лонг-листа.
+   Плохо: «Я бы поставил этот кейс на бронзу».
+   Хорошо: «Я бы поставил этому кейсу бронзу».
 - «для получения следующей медали» → «чтобы дотянуть до серебра» / «чтобы
    получить золото» (называй конкретную медаль)
 - «для следующей полосы» → «чтобы получить серебро» (называй полосу)
@@ -166,7 +171,7 @@ ${caps}
    предложении. Примеры начала:
      • «С моей точки зрения, этот кейс заслуживает ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)} — …»
      • «На мой взгляд, кейс получает ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)}, потому что …»
-     • «Я бы поставил этот кейс на ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)} — …»
+     • «Я бы поставил этому кейсу ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)} — …» (дательный падеж: «этому кейсу», а НЕ «этот кейс на»)
    Без вступлений «в целом» / «проект демонстрирует».
 
 2. Выступление цифрового члена жюри в двух версиях:
@@ -305,6 +310,24 @@ export async function generateAvatarSpeech(
         // Only accept the strip if the medal is still mentioned somewhere else.
         return mentionsAnywhere(stripped) ? stripped : s;
       };
+
+      // Fix the "поставил этот кейс на серебро" → "поставил этому кейсу
+      // серебро" mistake. Russian grammar requires the dative case here, but
+      // the model sometimes produces a calque from English "put this case on
+      // silver". This regex catches the common variants regardless of the
+      // medal word and the verb's gender/number/tense.
+      const fixDativeCase = (text: string): string => {
+        // No \b — JS regex \b doesn't recognise Cyrillic as word characters.
+        // The leading whitespace/start anchor is enforced via the verb stem.
+        return text.replace(
+          /(постав(?:ил(?:а|и)?|лю|им|ит|ите|ят|ил бы|ила бы|или бы)?)\s+(этот|данный|такой)\s+кейс\s+на\s+/giu,
+          "$1 этому кейсу "
+        );
+      };
+      parsed.one_paragraph_verdict = fixDativeCase(parsed.one_paragraph_verdict);
+      parsed.sections.verdict = fixDativeCase(parsed.sections.verdict);
+      parsed.short = fixDativeCase(parsed.short);
+      parsed.long = fixDativeCase(parsed.long);
 
       // [DEBUG] log strip in/out so we can confirm whether it's running in prod
       const _shortBefore = parsed.short;
