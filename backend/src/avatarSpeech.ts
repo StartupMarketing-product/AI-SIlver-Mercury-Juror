@@ -306,10 +306,19 @@ export async function generateAvatarSpeech(
         return mentionsAnywhere(stripped) ? stripped : s;
       };
 
+      // [DEBUG] log strip in/out so we can confirm whether it's running in prod
+      const _shortBefore = parsed.short;
+      const _opvBefore = parsed.one_paragraph_verdict;
       parsed.one_paragraph_verdict = stripBluntOpener(parsed.one_paragraph_verdict);
       parsed.sections.verdict = stripBluntOpener(parsed.sections.verdict);
       parsed.short = stripBluntOpener(parsed.short);
       parsed.long = stripBluntOpener(parsed.long);
+      console.log(`[avatarSpeech] STRIP DEBUG award=${awardRu}`);
+      console.log(`[avatarSpeech]   short BEFORE: ${JSON.stringify(_shortBefore.slice(0, 70))}`);
+      console.log(`[avatarSpeech]   short AFTER : ${JSON.stringify(parsed.short.slice(0, 70))}`);
+      console.log(`[avatarSpeech]   short CHANGED: ${_shortBefore !== parsed.short}`);
+      console.log(`[avatarSpeech]   opv BEFORE  : ${JSON.stringify(_opvBefore.slice(0, 70))}`);
+      console.log(`[avatarSpeech]   opv AFTER   : ${JSON.stringify(parsed.one_paragraph_verdict.slice(0, 70))}`);
 
       // Soft fallback: if a field STILL has no medal in the opening sentence,
       // prepend the soft prefix.
