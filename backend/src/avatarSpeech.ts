@@ -396,6 +396,20 @@ export async function generateAvatarSpeech(
 
       parsed.short = ensureAwardOnce(parsed.short);
       parsed.long = ensureAwardOnce(parsed.long);
+
+      // Polished ending: append a closing phrase to the spoken text so the
+      // avatar finishes on a smile-friendly word rather than a hard cut. The
+      // frontend ALSO holds the last frame for ~2s (see AvatarPlayerModal).
+      // Toggle off by flipping APPEND_OUTRO_PHRASE to false.
+      const APPEND_OUTRO_PHRASE = true;
+      const OUTRO_PHRASE = " Спасибо за внимание.";
+      if (APPEND_OUTRO_PHRASE) {
+        const ends = (s: string) => s.trim().endsWith(OUTRO_PHRASE.trim());
+        if (!ends(parsed.short)) parsed.short = parsed.short.trimEnd() + OUTRO_PHRASE;
+        if (!ends(parsed.long)) parsed.long = parsed.long.trimEnd() + OUTRO_PHRASE;
+        if (!ends(parsed.sections.close)) parsed.sections.close = parsed.sections.close.trimEnd() + OUTRO_PHRASE;
+      }
+
       return parsed;
     } catch (err) {
       if (attempt === 1) {

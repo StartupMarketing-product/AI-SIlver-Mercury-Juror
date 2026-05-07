@@ -89,6 +89,10 @@ export default function AvatarPlayerModal({
   const SHOW_INTRO = true;
   const INTRO_BEAT_MS = 2500; // each title beat
   const SKIP_MESSAGES_AFTER_INTRO = true; // dissolve straight into the verdict
+  // After the avatar finishes speaking, freeze the last frame for this many
+  // ms before closing — gives a "polished ending" beat instead of a hard cut.
+  // Set to 0 to revert to the old immediate-close behaviour.
+  const POST_VIDEO_HOLD_MS = 2000;
 
   const [stage, setStage] = useState<Stage>(SHOW_INTRO ? "intro-1" : "messages");
   const [messageIdx, setMessageIdx] = useState(0);
@@ -356,7 +360,17 @@ export default function AvatarPlayerModal({
               <video
                 ref={videoRef}
                 src={videoUrl}
-                onEnded={onClose}
+                onEnded={() => {
+                  // Hold the last frame for POST_VIDEO_HOLD_MS so the modal
+                  // doesn't slam shut the moment the avatar stops speaking.
+                  // The video element naturally pauses at end-of-stream so
+                  // the face stays on screen.
+                  if (POST_VIDEO_HOLD_MS > 0) {
+                    setTimeout(onClose, POST_VIDEO_HOLD_MS);
+                  } else {
+                    onClose();
+                  }
+                }}
                 onContextMenu={(e) => e.preventDefault()}
                 playsInline
                 disablePictureInPicture
