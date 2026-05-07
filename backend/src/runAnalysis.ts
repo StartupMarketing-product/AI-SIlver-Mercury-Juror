@@ -34,6 +34,13 @@ export async function runAnalysis(bundle: CaseBundle): Promise<CoreOutput> {
   }
   const { block, nomination } = resolved;
 
+  // Short-circuit: empty submissions get a canned "no data" verdict instead
+  // of being run through L2/critic/speech. Saves LLM calls and avoids the
+  // bizarre output of fake-scoring an empty form.
+  if (isEmptySubmission(bundle)) {
+    return buildNoDataVerdict(bundle, block, nomination);
+  }
+
   const l2Result = await runL2(bundle, block, nomination, apiKey);
 
   // Phase 4: critic pass — downgrade-only sanity check.
@@ -157,6 +164,83 @@ function resolveBlockAndNomination(bundle: CaseBundle): { block: import("./types
   const nomination = block.nominations[0];
   if (!nomination) return null;
   return { block, nomination };
+}
+
+/** Detect a submission with no actual content. Some festival entries arrive
+ *  with only a title — every other text field empty, no PDF evidence. The
+ *  AI shouldn't pretend to score nothing; instead we issue a canned "no data"
+ *  verdict so the avatar simply says the case wasn't filled in. */
+function isEmptySubmission(bundle: CaseBundle): boolean {
+  const tf = (bundle.text_fields ?? {}) as Record<string, unknown>;
+  // Substantive fields — title and product alone don't count as "content".
+  const SUBSTANTIVE_KEYS = [
+    "project_info", "project_strategy", "project_realisation",
+    "project_results", "project_business_results", "project_task",
+    "project_targets", "project_creative", "project_big_idea",
+    "project_insight", "project_unique",
+  ];
+  const hasAnyText = SUBSTANTIVE_KEYS.some((k) => {
+    const v = tf[k];
+    return typeof v === "string" && v.trim().length >= 30; // >=30 chars to count
+  });
+  // Any extracted PDF text counts as "has content".
+  const hasEvidence = (bundle.extracted_text ?? []).some(
+    (s) => typeof s.text === "string" && s.text.trim().length >= 100
+  );
+  return !hasAnyText && !hasEvidence;
+}
+
+const NO_DATA_MESSAGE =
+  "К сожалению, в этой заявке не было предоставлено никакой информации, поэтому нет смысла её рассматривать.";
+
+/** Build a canned CoreOutput for an empty submission. No criteria scores,
+ *  no LLM calls; the avatar just delivers the no-data message. */
+function buildNoDataVerdict(
+  bundle: CaseBundle,
+  block: import("./types/methodology.js").MethodologyBlock,
+  nomination: import("./types/methodology.js").NominationDef
+): CoreOutput {
+  const noDataSpeech = {
+    one_paragraph_verdict: NO_DATA_MESSAGE,
+    short: NO_DATA_MESSAGE,
+    long: NO_DATA_MESSAGE,
+    sections: {
+      hook: NO_DATA_MESSAGE,
+      verdict: NO_DATA_MESSAGE,
+      steelman: "Информации в заявке нет.",
+      fatal_flaw: "Заявка не заполнена.",
+      close: "Без данных оценить кейс невозможно.",
+    },
+  };
+  return {
+    case_id: bundle.metadata.case_id,
+    methodology_hash: getMethodologyHash(),
+    anchors_hash: getAnchorsHash(),
+    prompt_hash: "sha256-no-data",
+    model_id: "no-data-shortcircuit",
+    input_hash:
+      "case-" +
+      fnv1a(stableStringify({ metadata: bundle.metadata, text_fields: bundle.text_fields })),
+    block_code: block.code,
+    nomination_code: nomination.code,
+    l2: {
+      criteria_scores: [], // empty — frontend already hides the table
+      block_score: 0,
+      total_score: 0,
+      award_level: "longlist",
+      one_paragraph_verdict: NO_DATA_MESSAGE,
+      evidence_grade: undefined,
+      caps_applied: [],
+      case_fatal_flaw: "Заявка не заполнена — данных для оценки нет.",
+      why_not_higher_band_overall: "Нет содержательной информации в заявке.",
+    },
+    evidence: [],
+    missing_evidence: [],
+    key_quotes: [],
+    avatar_script: NO_DATA_MESSAGE,
+    avatar_script_structured: noDataSpeech,
+    consistency_check_passed: true,
+  };
 }
 
 function fnv1a(s: string): string {
