@@ -92,12 +92,20 @@ export async function runCritic(
   const modelId = process.env.OPENAI_CRITIC_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
   const sys = `${CRITIC_PERSONA}
 
+ВАЖНО для поля reason:
+- НЕ пиши «Первый жюрист поставил X», «Первый жюрист считает», «Первый жюрист
+  не учёл». Это внутренняя архитектурная деталь, которую видит зритель.
+- Пиши КОНКРЕТНО, что упущено в обосновании, в форме «В обосновании
+  отсутствуют …», «Не приведены …», «Нет цифр о …». Без отсылок к
+  «первому жюристу» / «первой оценке» / «исходному баллу».
+- Одно-два предложения, без вступлений.
+
 Ответь строго в JSON:
 {
   "per_criterion": [{
     "id": "идентификатор критерия из исходной оценки",
     "suggested_score": 1-10,
-    "reason": "конкретно, что упустил первый жюрист"
+    "reason": "конкретно, что упущено в обосновании (без упоминания «первого жюриста»)"
   }],
   "overall_recommendation": "downgrade" | "keep" | "no_critique",
   "overall_reason": "краткое суммарное мнение",
@@ -183,7 +191,12 @@ export async function runCritic(
 }
 
 /** Mutate the criteria_scores in place applying critic deltas. Returns the
- *  list of criteria that were actually changed. */
+ *  list of criteria that were actually changed.
+ *
+ *  Display contract: the rationale text is shown to the moderator on /grand,
+ *  so it must read like one coherent assessment — NOT like internal model
+ *  bookkeeping. Audit metadata (delta amount, critic provenance) lives on
+ *  output.l2.critic for replay/debug, not in the rationale string. */
 export function applyCriticDeltas(
   scores: CriterionScore[],
   deltas: CriticDelta[]
@@ -192,10 +205,24 @@ export function applyCriticDeltas(
   return scores.map((s) => {
     const d = byId.get(s.criterion);
     if (!d || d.applied_score >= s.score) return s;
+    // Sanitise the critic's reason: it sometimes references the upstream
+    // L2 model as "Первый жюрист поставил X" — that's an internal-architecture
+    // detail the festival audience doesn't need to see. Rewrite to plain
+    // critique language.
+    const cleanedReason = (d.reason || "")
+      .replace(/^Первый\s+жюрист[ау]?\s+поставил[аи]?\s+\d+(?:[.,]\d+)?\s*(?:балл[аов]?)?\s*за[\s\S]*?,\s*но\s+/iu, "")
+      .replace(/Первый\s+жюрист[ау]?\s+поставил[аи]?\s+\d+(?:[.,]\d+)?\s*(?:балл[аов]?)?\s*за\s+\S+,?\s*/giu, "")
+      .replace(/Первый\s+жюрист[ау]?/giu, "В оценке")
+      .trim();
+    // Combine cleaned reason + original strengths/weaknesses block, joined
+    // by a sentence break — drop the old "[critic:-X.Y] ... || ..." machinery.
+    const combined = cleanedReason
+      ? `${cleanedReason}${cleanedReason.endsWith(".") ? "" : "."} ${s.rationale}`
+      : s.rationale;
     return {
       ...s,
       score: d.applied_score,
-      rationale: `[critic:-${(s.score - d.applied_score).toFixed(1)}] ${d.reason} || ${s.rationale}`,
+      rationale: combined,
     };
   });
 }
