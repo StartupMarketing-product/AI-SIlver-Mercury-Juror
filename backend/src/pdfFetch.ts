@@ -17,6 +17,12 @@
 const MAX_PDF_BYTES = 20 * 1024 * 1024; // 20 MB
 const FETCH_TIMEOUT_MS = 30_000;
 
+/** Minimum shape we need from pdf-parse v2's PDFParse class. */
+interface PdfParseInstance {
+  getText(): Promise<{ text?: string; pages?: Array<{ num: number; text: string }> }>;
+  destroy(): Promise<void>;
+}
+
 export interface PdfExtractResult {
   /** Source URL that was fetched (echoed back for logging). */
   url: string;
@@ -69,16 +75,26 @@ export async function fetchAndExtractPdf(url: string): Promise<PdfExtractResult>
       return empty(`not a PDF (content-type=${ct})`);
     }
 
-    // Lazy import — pdf-parse pulls in a multi-MB dependency tree.
-    // pdf-parse v2 ships ESM with a named export `pdf` plus default; pick whichever exists.
-    const mod: any = await import("pdf-parse");
-    const pdfParse = mod.default ?? mod.pdf ?? mod;
-    const parsed: { text?: string; numpages?: number } = await pdfParse(buffer);
-    return {
-      url,
-      text: (parsed.text || "").trim(),
-      pages: parsed.numpages || 0,
-    };
+    // Lazy import — pdf-parse v2 exposes a class API (PDFParse), unlike v1's
+    // single function. Construct → load → getText → destroy.
+    const { PDFParse } = (await import("pdf-parse")) as { PDFParse: new (opts: { data: Uint8Array }) => PdfParseInstance };
+    const parser = new PDFParse({ data: new Uint8Array(buffer) });
+    try {
+      const result = await parser.getText();
+      const raw = (result?.text || "").trim();
+      // pdf-parse inserts "-- N of M --" markers between pages. For an
+      // image-only PDF (typical festival slide deck), THAT is all that comes
+      // back. Strip them so we can detect "no useful text" upstream and skip
+      // the segment instead of feeding the model just page numbers.
+      const cleaned = raw.replace(/-- \d+ of \d+ --/g, "").replace(/\s+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+      return {
+        url,
+        text: cleaned,
+        pages: Array.isArray(result?.pages) ? result.pages.length : 0,
+      };
+    } finally {
+      try { await parser.destroy(); } catch { /* ignore cleanup errors */ }
+    }
   } catch (e) {
     return empty(`exception: ${(e as Error).message?.slice(0, 120) ?? "unknown"}`);
   } finally {
