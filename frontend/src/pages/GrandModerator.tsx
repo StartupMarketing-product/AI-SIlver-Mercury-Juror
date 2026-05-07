@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 // Feature flag: hide / show the "Записать выступления для всех кейсов" bulk-render button.
 // Flip to `true` to bring the button back. Handler, state, and backend route remain wired up.
-const SHOW_RENDER_ALL = false;
+const SHOW_RENDER_ALL = true;
 
 type AwardLevel = "gold" | "silver" | "bronze" | "shortlist" | "longlist";
 
