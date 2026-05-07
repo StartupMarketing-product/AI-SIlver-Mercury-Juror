@@ -286,10 +286,14 @@ function buildCaseText(bundle: CaseBundle): string {
   if (tf.project_channels) parts.push(`## Каналы\n${tf.project_channels}`);
   if (tf.project_realisation) parts.push(`## Реализация\n${tf.project_realisation}`);
   if (bundle.extracted_text?.length) {
+    // Per-segment truncation. Was 1500 (~250 words) which silently chopped 80%
+    // off any meaningful slide deck. Bumped to 6000 (~1000 words) so an
+    // average 10-page presentation fits in one segment block, while still
+    // keeping the total caseText under the prompt slice cap further below.
     parts.push(
       "## Доказательная база (используй cite_key в evidence_ids):\n" +
         bundle.extracted_text
-          .map((s) => `[${s.cite_key ?? "?"}] (${s.source}): ${s.text.slice(0, 1500)}`)
+          .map((s) => `[${s.cite_key ?? "?"}] (${s.source}): ${s.text.slice(0, 6000)}`)
           .join("\n\n")
     );
   }
@@ -529,7 +533,10 @@ one_paragraph_verdict: 2–3 предложения. Сначала вердик
         model: modelId,
         messages: [
           { role: "system", content: sys + reminder },
-          { role: "user", content: `Кейс:\n\n${caseText.slice(0, 12000)}` },
+          // 18000 chars (~4500 tokens) — bumped from 12000 to fit a few PDF
+          // evidence segments alongside the text fields without truncating
+          // them. gpt-4o has 128k context so cost / latency impact is negligible.
+          { role: "user", content: `Кейс:\n\n${caseText.slice(0, 18000)}` },
         ],
         response_format: { type: "json_object" },
         temperature: 0,

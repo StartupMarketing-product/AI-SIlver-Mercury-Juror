@@ -29,6 +29,8 @@ import { buildCaseBundle } from "./ingestion.js";
 import { runAnalysis } from "./runAnalysis.js";
 import { resolveNomination } from "./caseLookup.js";
 import { moderatorAuth } from "./auth.js";
+import { fetchManyPdfs } from "./pdfFetch.js";
+import { insertEvidenceBatch, type NewEvidenceInput } from "./db.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -362,6 +364,8 @@ app.post("/api/admin/import-json", moderatorAuth, upload.single("file"), async (
     let queued = 0;
     const errors: Array<{ project_id?: string; error: string }> = [];
     const importedCaseIds: string[] = [];
+    // Phase 1: PDF URLs to fetch + extract per case before scoring.
+    const pdfUrlsByCaseId = new Map<string, string[]>();
 
     for (const nom of nominations) {
       const code = (nom?.code ?? "").toUpperCase();
@@ -382,6 +386,15 @@ app.post("/api/admin/import-json", moderatorAuth, upload.single("file"), async (
           // Empty submission — keep it but mark as "uploaded" so Grand Moderator can see it
           // (some festival entries genuinely come in with skeletal text).
         }
+        // Phase 1: collect PDF URLs from the project record so the scoring
+        // loop can fetch + extract them before L2 sees the case.
+        const pdfUrls: string[] = [];
+        for (const k of ["project_presentation_pdf", "project_results_file"] as const) {
+          const v = (p as any)?.[k];
+          if (typeof v === "string" && /^https?:\/\//i.test(v.trim())) {
+            pdfUrls.push(v.trim());
+          }
+        }
         try {
           const caseId = await insertCase({
             external_case_id: externalId,
@@ -394,6 +407,7 @@ app.post("/api/admin/import-json", moderatorAuth, upload.single("file"), async (
             source: "sm2026_import",
           } as any);
           importedCaseIds.push(caseId);
+          if (pdfUrls.length) pdfUrlsByCaseId.set(caseId, pdfUrls);
           imported++;
         } catch (e) {
           const msg = String((e as Error).message ?? "");
@@ -414,6 +428,69 @@ app.post("/api/admin/import-json", moderatorAuth, upload.single("file"), async (
           const stored = await getCase(caseId);
           if (!stored) continue;
           const bundle = await buildCaseBundle(stored);
+
+          // Phase 1: fetch + extract any PDFs linked from the JSON, append
+          // their text to the bundle's evidence so L2 sees deck content too.
+          //
+          // Critical pattern (mirrors ingestion.ts): every segment we add to
+          // the bundle MUST be persisted to public.evidence and tagged with
+          // BOTH cite_key + evidence_id. Otherwise resolveCiteKeys() in l2.ts
+          // can't map model citations like "PDF1" back to a DB row, the
+          // criterion's evidence_ids array is silently dropped to empty, and
+          // scoring degrades because the model "appeared to cite no evidence".
+          const urls = pdfUrlsByCaseId.get(caseId) ?? [];
+          if (urls.length) {
+            const results = await fetchManyPdfs(urls);
+            // Cap each PDF's text at 12k chars so a single huge deck doesn't
+            // blow the L2 prompt budget. Anything longer is truncated; the
+            // first 12k almost always contains the strategy + results sections.
+            const PDF_CHAR_CAP = 12_000;
+
+            type NewSeg = { text: string; url: string; pages: number };
+            const newSegs: NewSeg[] = [];
+            for (const r of results) {
+              if (r.text && r.text.length > 100) {
+                newSegs.push({ text: r.text.slice(0, PDF_CHAR_CAP), url: r.url, pages: r.pages });
+                console.log(
+                  `[import-json] case=${caseId} pdf ok url=${r.url} pages=${r.pages} chars=${r.text.length}${r.text.length > PDF_CHAR_CAP ? " (truncated)" : ""}`
+                );
+              } else {
+                console.warn(
+                  `[import-json] case=${caseId} pdf failed url=${r.url} reason=${r.error ?? "empty text"}`
+                );
+              }
+            }
+
+            if (newSegs.length) {
+              const evidenceInputs: NewEvidenceInput[] = newSegs.map((s) => ({
+                case_id: caseId,
+                kind: "extracted_text",
+                source: s.url,
+                snippet: s.text.slice(0, 2000),
+                page_or_slide: undefined,
+                storage_path: undefined,
+              }));
+              let evidenceIds: string[] = [];
+              try {
+                evidenceIds = await insertEvidenceBatch(evidenceInputs);
+              } catch (err) {
+                console.warn(
+                  `[import-json] case=${caseId} insertEvidenceBatch for PDFs failed: ${(err as Error).message}`
+                );
+              }
+              const baseIdx = bundle.extracted_text.length;
+              newSegs.forEach((s, i) => {
+                bundle.extracted_text.push({
+                  text: s.text,
+                  source: s.url,
+                  cite_key: `PDF${baseIdx + i + 1}`,
+                  evidence_id: evidenceIds[i], // may be undefined if insert failed
+                  kind: "extracted_text",
+                });
+              });
+            }
+          }
+
           const out = await runAnalysis(bundle);
           await insertVerdict(out);
           queued++;
