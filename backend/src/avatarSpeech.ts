@@ -292,9 +292,11 @@ export async function generateAvatarSpeech(
       };
       const mentionsAnywhere = (s: string): boolean => {
         const t = s.toLowerCase();
-        // Match all common Russian inflections of the award word.
-        const stem = lower.replace(/[аыоие]$/u, "");
-        return t.includes(lower) || new RegExp(`\\b${stem}[аыоиеу]?\\b`, "u").test(t);
+        // JS \b doesn't recognise Cyrillic as word characters, so use a plain
+        // substring match against the stem ("бронз" / "серебр" / "золот" etc.).
+        // The stem is unique enough that false positives are negligible.
+        const stem = lower.replace(/[аыоиеу]$/u, "");
+        return t.includes(stem);
       };
       const stripBluntOpener = (s: string): string => {
         // Match "<Award>. " or "<Award>, " at the very start (any case).
