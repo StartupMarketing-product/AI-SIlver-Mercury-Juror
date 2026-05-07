@@ -187,6 +187,13 @@ ${caps}
   (5) close — что нужно сделать, чтобы кейс получил следующую медаль.
 
 ОБЯЗАТЕЛЬНО:
+- ⛔ ЗАПРЕЩЕНО начинать ЛЮБОЕ из полей (one_paragraph_verdict, short, long,
+  sections.verdict) со слова «${AWARD_RU[args.award_level]}.» или
+  «${AWARD_RU[args.award_level]},». Это резкий тон, который мы
+  специально убираем. Каждое поле начинается с мягкого оборота от
+  первого лица («С моей точки зрения…», «На мой взгляд…», «Я бы
+  поставил…», «По моему мнению…»), а слово «${AWARD_RU[args.award_level].toLowerCase()}»
+  встраивается ВНУТРИ предложения, а не как отдельное слово в начале.
 - Слово «${AWARD_RU[args.award_level]}» — финальный вердикт. Может
   появиться в любой грамматической форме («бронзу», «бронзовая медаль»).
 - Оно встречается:
@@ -265,18 +272,47 @@ export async function generateAvatarSpeech(
       const awardRu = AWARD_RU[args.award_level];
       const lower = awardRu.toLowerCase();
 
-      // For one_paragraph_verdict and sections.verdict the award word must
-      // appear in the FIRST SENTENCE (not necessarily as the first word —
-      // soft openings like "На мой взгляд, этот кейс заслуживает бронзы..."
-      // are now preferred). Only prepend a soft fallback if the model failed
-      // to mention the award in the opening sentence at all.
+      // Two-step normalisation:
+      //
+      //   STEP A. Strip any bare-medal opener like "Бронза. " / "Серебро, "
+      //   that the model wrote out of habit despite the prompt forbidding it.
+      //   We only strip it when the rest of the text still mentions the award
+      //   in its soft form — otherwise the field would lose the medal
+      //   reference entirely.
+      //
+      //   STEP B. After stripping, if the field STILL doesn't mention the
+      //   award in the first sentence, prepend a soft prefix as fallback.
+      //
+      //   This is the inverse of the previous logic: instead of "add medal
+      //   when missing", we now "remove blunt medal when present, then add
+      //   soft medal when missing".
       const firstSentence = (s: string): string => {
         const m = s.match(/^[^.!?\n]+[.!?\n]?/);
         return (m ? m[0] : s).toLowerCase();
       };
-      const mentionsInFirstSentence = (s: string): boolean =>
-        firstSentence(s).includes(lower) || firstSentence(s).includes(lower.replace(/а$/, "у")); // accusative
+      const mentionsAnywhere = (s: string): boolean => {
+        const t = s.toLowerCase();
+        // Match all common Russian inflections of the award word.
+        const stem = lower.replace(/[аыоие]$/u, "");
+        return t.includes(lower) || new RegExp(`\\b${stem}[аыоиеу]?\\b`, "u").test(t);
+      };
+      const stripBluntOpener = (s: string): string => {
+        // Match "<Award>. " or "<Award>, " at the very start (any case).
+        const re = new RegExp(`^${awardRu}\\s*[.,]\\s+`, "i");
+        const stripped = s.replace(re, "").trimStart();
+        // Only accept the strip if the medal is still mentioned somewhere else.
+        return mentionsAnywhere(stripped) ? stripped : s;
+      };
 
+      parsed.one_paragraph_verdict = stripBluntOpener(parsed.one_paragraph_verdict);
+      parsed.sections.verdict = stripBluntOpener(parsed.sections.verdict);
+      parsed.short = stripBluntOpener(parsed.short);
+      parsed.long = stripBluntOpener(parsed.long);
+
+      // Soft fallback: if a field STILL has no medal in the opening sentence,
+      // prepend the soft prefix.
+      const mentionsInFirstSentence = (s: string): boolean =>
+        firstSentence(s).includes(lower) || firstSentence(s).includes(lower.replace(/а$/, "у"));
       const softPrefix = `На мой взгляд, этот кейс заслуживает ${lower} с баллом ${args.total_score.toFixed(1)}. `;
       if (!mentionsInFirstSentence(parsed.one_paragraph_verdict)) {
         parsed.one_paragraph_verdict = softPrefix + parsed.one_paragraph_verdict;
