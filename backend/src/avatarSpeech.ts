@@ -360,8 +360,15 @@ export async function generateAvatarSpeech(
 
       const ensureAwardOnce = (text: string): string => {
         const cleaned = dedupAward(text);
-        if (cleaned.toLowerCase().includes(lower)) return cleaned;
-        return `${awardRu}. ${cleaned}`;
+        // Use the same stem-based check as mentionsAnywhere so declined forms
+        // ("бронзу", "бронзы", "бронзой") count as a valid medal mention.
+        // Without this, a soft phrase like "заслуживает бронзу" would NOT be
+        // detected and the function would prepend "Бронза. " — undoing the
+        // bare-medal strip we did one step earlier.
+        if (mentionsAnywhere(cleaned)) return cleaned;
+        // If the medal really is missing, fall back to the soft prefix
+        // (NOT bare "${awardRu}. " — that was the old blunt style).
+        return `На мой взгляд, этот кейс заслуживает ${lower} с баллом ${args.total_score.toFixed(1)}. ${cleaned}`;
       };
 
       parsed.short = ensureAwardOnce(parsed.short);
