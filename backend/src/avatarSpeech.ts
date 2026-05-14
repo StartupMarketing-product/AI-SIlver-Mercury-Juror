@@ -57,6 +57,56 @@ const AWARD_RU: Record<AwardLevel, string> = {
   longlist: "Лонг-лист",
 };
 
+/**
+ * Russian award names in all the cases we actually use in speech templates.
+ *
+ *   nom  — «Бронза»          (subject: «бронза за стратегию»)
+ *   gen  — «бронзы»          (after «заслуживает», «достоин», «уровня»)
+ *   dat  — «бронзе»          (rarely used here, included for completeness)
+ *   acc  — «бронзу»          (after «поставил», «получает», «тянет на»)
+ *   ins  — «бронзой»         (after «с», «между»)
+ *   prep — «о бронзе»        (after prepositions «о/в/на + prep»)
+ *
+ * Russian award names are not regularly inflected — «бронза» is feminine
+ * 1st-declension, «серебро/золото» are neuter 2nd-declension, «шорт-лист /
+ * лонг-лист» are masculine inanimate. None of the off-the-shelf morphology
+ * libraries would help us here without adding a 10MB dependency, so the
+ * declension table is hand-written. The table is tiny (5 awards × 6 cases)
+ * and the forms are well-known, so this is fine.
+ */
+interface AwardForms {
+  nom: string;
+  nomLower: string;
+  gen: string;
+  dat: string;
+  acc: string;
+  ins: string;
+  prep: string;
+}
+
+const AWARD_FORMS: Record<AwardLevel, AwardForms> = {
+  gold: {
+    nom: "Золото", nomLower: "золото",
+    gen: "золота", dat: "золоту", acc: "золото", ins: "золотом", prep: "золоте",
+  },
+  silver: {
+    nom: "Серебро", nomLower: "серебро",
+    gen: "серебра", dat: "серебру", acc: "серебро", ins: "серебром", prep: "серебре",
+  },
+  bronze: {
+    nom: "Бронза", nomLower: "бронза",
+    gen: "бронзы", dat: "бронзе", acc: "бронзу", ins: "бронзой", prep: "бронзе",
+  },
+  shortlist: {
+    nom: "Шорт-лист", nomLower: "шорт-лист",
+    gen: "шорт-листа", dat: "шорт-листу", acc: "шорт-лист", ins: "шорт-листом", prep: "шорт-листе",
+  },
+  longlist: {
+    nom: "Лонг-лист", nomLower: "лонг-лист",
+    gen: "лонг-листа", dat: "лонг-листу", acc: "лонг-лист", ins: "лонг-листом", prep: "лонг-листе",
+  },
+};
+
 const PERSONA = `
 Ты — опытный член жюри Silver Mercury XXVII. Ты говоришь как уважительный,
 вдумчивый коллега в комнате обсуждения — не как судья на трибуне. Высказываешь
@@ -140,12 +190,26 @@ function buildSystemPrompt(args: BuildSpeechArgs): string {
     ? "Применены ограничения (важно — это и есть финальный балл):\n" +
       args.caps_applied.map((c) => `  - ${c.criterion}: ${c.original_score} → ${c.capped_score} (${c.reason})`).join("\n")
     : "Ограничения не применялись.";
+  const forms = AWARD_FORMS[args.award_level];
+  const grammarTable = `ПАДЕЖИ НАГРАДЫ — ИСПОЛЬЗУЙ ТОЛЬКО ЭТИ ФОРМЫ:
+  • после «поставил кейсу …» / «получает …» / «получит …» / «тянет на …»
+    (винительный падеж):  «${forms.acc}»
+  • после «заслуживает …» / «достоин …» / «уровня …»
+    (родительный падеж):  «${forms.gen}»
+  • именительный (только в начале нового предложения, отдельно):
+    «${forms.nom}»
+
+  ⛔ НИКОГДА: «поставил кейсу ${forms.nom.toLowerCase()}» / «заслуживает ${forms.nom.toLowerCase()}»
+     — это грамматическая ошибка.
+  ✅ ВЕРНО:  «поставил кейсу ${forms.acc}» / «заслуживает ${forms.gen}»`;
 
   return `${PERSONA}
 
 ФИНАЛЬНЫЙ ВЕРДИКТ (использовать в речи):
   Награда: ${AWARD_RU[args.award_level]}
   Балл: ${args.total_score.toFixed(1)} / 10
+
+${grammarTable}
 
 Это окончательный балл после всех проверок. Если в обосновании какого-то
 критерия упомянут более высокий балл, это потому что после генерации
@@ -168,10 +232,10 @@ ${caps}
 Напиши:
 1. one_paragraph_verdict — короткий вердикт (2–3 предложения) для админ-
    панели. Смягчённое начало от первого лица + название медали в первом
-   предложении. Примеры начала:
-     • «С моей точки зрения, этот кейс заслуживает ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)} — …»
-     • «На мой взгляд, кейс получает ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)}, потому что …»
-     • «Я бы поставил этому кейсу ${AWARD_RU[args.award_level].toLowerCase()} с баллом ${args.total_score.toFixed(1)} — …» (дательный падеж: «этому кейсу», а НЕ «этот кейс на»)
+   предложении. Примеры начала (обрати внимание на падежи):
+     • «С моей точки зрения, этот кейс заслуживает ${forms.gen} с баллом ${args.total_score.toFixed(1)} — …»  ← РОДИТЕЛЬНЫЙ после «заслуживает»
+     • «На мой взгляд, кейс получает ${forms.acc} с баллом ${args.total_score.toFixed(1)}, потому что …»  ← ВИНИТЕЛЬНЫЙ после «получает»
+     • «Я бы поставил этому кейсу ${forms.acc} с баллом ${args.total_score.toFixed(1)} — …»  ← ВИНИТЕЛЬНЫЙ после «поставил кейсу»
    Без вступлений «в целом» / «проект демонстрирует».
 
 2. Выступление цифрового члена жюри в двух версиях:
@@ -276,6 +340,59 @@ export async function generateAvatarSpeech(
       const parsed = SpeechSchema.parse(JSON.parse(raw));
       const awardRu = AWARD_RU[args.award_level];
       const lower = awardRu.toLowerCase();
+      const forms = AWARD_FORMS[args.award_level];
+
+      // ─── Grammar fix: award name must agree with the verb's case ───────
+      //
+      // The model regularly emits the award in nominative case ("бронза")
+      // after verbs that require accusative ("поставил кейсу бронзу") or
+      // genitive ("заслуживает бронзы"). This post-processor catches the
+      // common verb patterns and rewrites the award word into the right
+      // form. Cyrillic-safe (no \b — JS \b doesn't recognise Cyrillic
+      // letters; we use a negative lookahead instead).
+      // Hyphens don't need escaping outside a character class — and with the
+      // `u` flag, `\-` is an invalid escape. So just use the raw strings.
+      const nomAlt = `(?:${forms.nom}|${forms.nomLower})`;
+      const noTrailingCyr = "(?![а-яёА-ЯЁ])"; // word-boundary substitute for Cyrillic
+      const fixAwardCase = (text: string): string => {
+        let out = text;
+        // 1) ACCUSATIVE — after verbs of giving / awarding / receiving / reaching.
+        //    «поставил кейсу X» / «получает X» / «получит X» / «получил X»
+        //    «присудил X»     / «дал X»      / «вручил X»  / «номинировал на X»
+        //    «тянет на X»     / «может получить X»
+        const accVerbs = [
+          "постав(?:ил(?:[аи])?|лю|им|ит|ите|ят|ил[аи]? бы)",
+          "получ(?:ает|ают|ит|ат|ил(?:[аи])?|ить|ил[аи]? бы|ит бы)",
+          "присуд(?:ил(?:[аи])?|ит|ят|ить|ил[аи]? бы)",
+          "вруч(?:ил(?:[аи])?|ит|ат|ить|ил[аи]? бы)",
+          "д(?:ал[аи]?|аст|ать|ал[аи]? бы)",
+          "тян(?:ет|ут|ул(?:[аи])?)\\s+на",
+          "номин(?:ирова(?:л(?:[аи])?|ть)|ируем|ируют)\\s+на",
+          "оценива(?:ю|ем|ет|ют)\\s+как",
+        ];
+        for (const v of accVerbs) {
+          // Capture group keeps everything up to the award word; optional
+          // middle words like "этому кейсу" / "кейс" / "его" / "на".
+          const re = new RegExp(
+            `(${v}\\s+(?:(?:этому|такому|данному)?\\s*кейсу\\s+|(?:этот|такой|данный)?\\s*кейс\\s+на\\s+|на\\s+|кейс\\s+|)?)${nomAlt}${noTrailingCyr}`,
+            "giu"
+          );
+          out = out.replace(re, (_, prefix) => `${prefix}${forms.acc}`);
+        }
+        // 2) GENITIVE — after «заслуживает», «достоин/достойна», «уровня», «стоит».
+        const genVerbs = [
+          "заслужива(?:ю|ем|ет|ют|л(?:[аио])?|л[аио]? бы)",
+          "заслуж(?:ил(?:[аи])?|ить|ит|ат|ил[аи]? бы)",
+          "достои?н(?:[аыо])?",
+          "уровн[яе]",
+          "сто(?:ит|ят|ил(?:[аи])?)",
+        ];
+        for (const v of genVerbs) {
+          const re = new RegExp(`(${v}\\s+)${nomAlt}${noTrailingCyr}`, "giu");
+          out = out.replace(re, (_, prefix) => `${prefix}${forms.gen}`);
+        }
+        return out;
+      };
 
       // Two-step normalisation:
       //
@@ -329,6 +446,18 @@ export async function generateAvatarSpeech(
       parsed.short = fixDativeCase(parsed.short);
       parsed.long = fixDativeCase(parsed.long);
 
+      // Apply grammar-case fixer to every text field — order matters: must
+      // run AFTER fixDativeCase (which normalises "кейс на" → "кейсу") so
+      // the accusative-verb patterns see the canonical form.
+      parsed.one_paragraph_verdict = fixAwardCase(parsed.one_paragraph_verdict);
+      parsed.sections.verdict = fixAwardCase(parsed.sections.verdict);
+      parsed.sections.hook = fixAwardCase(parsed.sections.hook);
+      parsed.sections.steelman = fixAwardCase(parsed.sections.steelman);
+      parsed.sections.fatal_flaw = fixAwardCase(parsed.sections.fatal_flaw);
+      parsed.sections.close = fixAwardCase(parsed.sections.close);
+      parsed.short = fixAwardCase(parsed.short);
+      parsed.long = fixAwardCase(parsed.long);
+
       // [DEBUG] log strip in/out so we can confirm whether it's running in prod
       const _shortBefore = parsed.short;
       const _opvBefore = parsed.one_paragraph_verdict;
@@ -344,10 +473,14 @@ export async function generateAvatarSpeech(
       console.log(`[avatarSpeech]   opv AFTER   : ${JSON.stringify(parsed.one_paragraph_verdict.slice(0, 70))}`);
 
       // Soft fallback: if a field STILL has no medal in the opening sentence,
-      // prepend the soft prefix.
-      const mentionsInFirstSentence = (s: string): boolean =>
-        firstSentence(s).includes(lower) || firstSentence(s).includes(lower.replace(/а$/, "у"));
-      const softPrefix = `На мой взгляд, этот кейс заслуживает ${lower} с баллом ${args.total_score.toFixed(1)}. `;
+      // prepend the soft prefix. Use GENITIVE form because the carrier verb
+      // is «заслуживает» («заслуживает бронзы», not «заслуживает бронза»).
+      const mentionsInFirstSentence = (s: string): boolean => {
+        const t = firstSentence(s);
+        return t.includes(forms.nomLower) || t.includes(forms.gen) ||
+               t.includes(forms.acc) || t.includes(forms.dat);
+      };
+      const softPrefix = `На мой взгляд, этот кейс заслуживает ${forms.gen} с баллом ${args.total_score.toFixed(1)}. `;
       if (!mentionsInFirstSentence(parsed.one_paragraph_verdict)) {
         parsed.one_paragraph_verdict = softPrefix + parsed.one_paragraph_verdict;
       }
@@ -391,7 +524,8 @@ export async function generateAvatarSpeech(
         if (mentionsAnywhere(cleaned)) return cleaned;
         // If the medal really is missing, fall back to the soft prefix
         // (NOT bare "${awardRu}. " — that was the old blunt style).
-        return `На мой взгляд, этот кейс заслуживает ${lower} с баллом ${args.total_score.toFixed(1)}. ${cleaned}`;
+        // GEN case: «заслуживает бронзы», not «заслуживает бронза».
+        return `На мой взгляд, этот кейс заслуживает ${forms.gen} с баллом ${args.total_score.toFixed(1)}. ${cleaned}`;
       };
 
       parsed.short = ensureAwardOnce(parsed.short);
