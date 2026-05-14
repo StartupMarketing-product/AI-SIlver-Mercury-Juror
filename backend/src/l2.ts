@@ -375,15 +375,38 @@ const ANTI_SYCOPHANCY_RULES = `
 // \bуникальн would only match when preceded by a non-Cyrillic char (rare).
 // The leading "(?<![а-яё])" Unicode lookbehind anchors to a word-boundary in
 // any Cyrillic-friendly way.
+// Adjective case suffixes — covers all six cases × three genders × plural.
+// Includes the easily-missed instrumental (-ым) and prepositional (-ом) endings.
+const ADJ_ENDINGS = "(?:ый|ой|ий|ая|ое|ее|ые|ие|ого|его|ой|ему|ому|ым|им|ыми|ими|ую|юю|ом|ем|ых|их)";
+
 const VAGUE_PRAISE: RegExp[] = [
-  /(?<![а-яё])уникальн(?:ый|ая|ое|ые|ого|ой|ому|ыми|ую)\s*/giu,
-  /(?<![а-яё])беспрецедентн(?:ый|ая|ое|ые|ого|ой|ую)\s*/giu,
-  /(?<![а-яё])революционн(?:ый|ая|ое|ые|ого|ой|ую)\s*/giu,
-  /(?<![а-яё])прорывн(?:ой|ая|ое|ые|ого|ой|ую)\s*/giu,
-  /(?<![а-яё])выдающ(?:ийся|аяся|ееся|иеся|егося|ейся)\s*/giu,
-  /(?<![а-яё])феноменальн(?:ый|ая|ое|ые|ого|ой|ую)\s*/giu,
-  /(?<![а-яё])грандиозн(?:ый|ая|ое|ые|ого|ой|ую)\s*/giu,
-  /(?<![а-яё])впечатляющ(?:ий|ая|ее|ие|его|ей|ую)\s*/giu,
+  // Original Layer-2 list.
+  new RegExp(`(?<![а-яё])уникальн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])беспрецедентн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])революционн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])прорывн${ADJ_ENDINGS}\\s*`, "giu"),
+  /(?<![а-яё])выдающ(?:ийся|аяся|ееся|иеся|егося|ейся|имся)\s*/giu,
+  new RegExp(`(?<![а-яё])феноменальн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])грандиозн${ADJ_ENDINGS}\\s*`, "giu"),
+  /(?<![а-яё])впечатляющ(?:ий|ая|ее|ие|его|ей|ую|им|ими)\s*/giu,
+  // Empirical substitutes the model picked once top offenders were scrubbed.
+  new RegExp(`(?<![а-яё])оригинальн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])значительн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])значим${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])инновационн${ADJ_ENDINGS}\\s*`, "giu"),
+  // Other generic-praise adjectives.
+  /(?<![а-яё])(?:ярк(?:ий|ая|ое|ие|ого|ой|ому|им|ими|ую|ом))\s*/giu,
+  new RegExp(`(?<![а-яё])мощн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])серьёзн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])серьезн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])успешн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])существенн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])заметн${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])мастерск${ADJ_ENDINGS}\\s*`, "giu"),
+  new RegExp(`(?<![а-яё])качественн${ADJ_ENDINGS}\\s*`, "giu"),
+  /(?<![а-яё])глубок(?:ий|ая|ое|ие|ого|ой|ому|им|ими|ую|ом)\s*/giu,
+  /(?<![а-яё])сильнейш(?:ий|ая|ее|ие|его|ей|ую|им|ими)\s*/giu,
+  new RegExp(`(?<![а-яё])гениальн${ADJ_ENDINGS}\\s*`, "giu"),
 ];
 
 // "Не хватает долгосрочных" critique — rewrites to be time-window-aware

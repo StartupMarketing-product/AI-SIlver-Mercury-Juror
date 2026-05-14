@@ -169,6 +169,76 @@ const PERSONA = `
   конкретные цифры из обоснования.
 `.trim();
 
+/**
+ * Digital-block reasoning framework for the speech generator.
+ *
+ * Critical: this is NOT a vocabulary list. It tells the model HOW TO ARGUE
+ * about a Digital case — which questions to answer in the speech, which
+ * metric levels count as strong evidence, and which critiques are off-limits
+ * for short campaigns. Without this, the speech is just a stylistic rewrite
+ * of whatever L2 produced; with it, the speech generator independently
+ * evaluates the causal chain and chooses what to emphasise.
+ *
+ * Injected ONLY for Block D (Digital) cases — recognised from the nomination
+ * code prefix. Other blocks (D01/D10/D13/D15 etc. — all D) get this; non-D
+ * blocks get an empty string.
+ */
+const SPEECH_DIGITAL_FRAMEWORK = `
+ОСОБЫЕ ПРАВИЛА АРГУМЕНТАЦИИ ДЛЯ ЦИФРОВОГО КЕЙСА (БЛОК D).
+
+ПРИЧИННО-СЛЕДСТВЕННАЯ ЦЕПОЧКА — мысленно пройди её, прежде чем писать речь:
+  бизнес/категорийный вызов → поведение аудитории → инсайт →
+  стратегическая задача → идея → инструменты и реализация →
+  измеренные результаты → бизнес/категорийный эффект.
+
+В steelman НАЗОВИ сильнейшее звено цепочки конкретным фактом или цифрой.
+В fatal_flaw НАЗОВИ слабое или отсутствующее звено — НЕ общими словами
+(«не хватает данных»), а конкретно («креативная идея не выросла из
+поведенческого инсайта», «медийные охваты не связаны с бизнес-метриками»,
+«стратегия не отвечает на вызов категории X»).
+
+ИЕРАРХИЯ ЭФФЕКТИВНОСТИ (от сильнейших к слабейшим) — цитируй её прямо:
+  1) БИЗНЕС-МЕТРИКИ — sales, выручка, incremental revenue, EBITDA,
+     margin, доля рынка, ROI. Это самое сильное доказательство.
+  2) МАРКЕТИНГОВЫЕ / БРЕНД / CRM — ROMI, ROAS, ДРР, CAC, CPA, CPL, LTV,
+     ARPU, AOV, CR, retention, churn, DAU, MAU, awareness, consideration,
+     purchase intent, NPS, CSAT, TOM. Сильное подтверждение.
+  3) МЕДИЙНЫЕ / ENGAGEMENT — impressions, clicks, CTR, CPC, CPM, reach,
+     frequency, likes, comments, views, VTR, ER. Слабые сами по себе.
+
+ПРАВИЛО АРГУМЕНТА:
+  • Если результаты опираются ТОЛЬКО на уровень-3 (медийные), в речи
+    скажи это ПРЯМО: «кейс показал охваты и вовлечение, но нет данных
+    о влиянии на продажи / долю рынка / маркетинговые метрики».
+  • Если кейс достал уровень-1 (бизнес-метрики) — в steelman процитируй
+    конкретное число и назови метрику первого уровня.
+  • Не повышай впечатление от уровня-3 одним только большим масштабом.
+    «10 миллионов охватов» — не доказательство бизнес-результата.
+
+ВРЕМЕННОЕ ОКНО — ⛔ ЗАПРЕЩЕНО критиковать молодую кампанию (<12 месяцев)
+за «отсутствие долгосрочных результатов» / «нет 3-летнего эффекта».
+Это шаблонная отговорка, а не аргумент. Если кампания запущена недавно,
+оценивай только то, что измеримо за прошедший срок: первичные KPI,
+конверсии, поведенческие сдвиги, краткосрочный ROI, изменения восприятия.
+Если дата запуска не указана — действуй как с молодой.
+
+УРОВНИ НАГРАДЫ — речь должна аргументировать НА ПРАВИЛЬНОМ уровне:
+  • GOLD — речь утверждает, что кейс задаёт новый стандарт категории,
+    доказана причинно-следственная связь, результат вне рамок обычного.
+  • SILVER — речь утверждает, что кейс — ориентир, сильная идея + сильное
+    исполнение + подтверждённый результат, но НЕ меняет правила игры.
+  • BRONZE — речь говорит о крепкой профессиональной работе, корректно
+    решающей задачу, результат связан с бизнесом, но без «wow».
+  • SHORT-LIST — речь признаёт профессионализм, но называет, чего не
+    хватает до бронзы (масштаб эффекта, развитость идеи, доказательная
+    база).
+  • LONG-LIST — речь честно говорит, какое звено цепочки сломано.
+
+ЕСЛИ кейс получил BRONZE, и в речи звучат фразы уровня SILVER («задаёт
+новый стандарт», «революция в категории») — это рассогласование.
+Аргумент должен соответствовать финальному баллу.
+`.trim();
+
 interface BuildSpeechArgs {
   award_level: AwardLevel;
   total_score: number;
@@ -191,6 +261,11 @@ function buildSystemPrompt(args: BuildSpeechArgs): string {
       args.caps_applied.map((c) => `  - ${c.criterion}: ${c.original_score} → ${c.capped_score} (${c.reason})`).join("\n")
     : "Ограничения не применялись.";
   const forms = AWARD_FORMS[args.award_level];
+  // Inject the Digital reasoning framework only for Block D cases (D01, D10,
+  // D13, D15 etc.). Recognised from the nomination code prefix. Non-D blocks
+  // get the empty string so the rest of the prompt stays identical for them.
+  const isDigitalBlock = (args.nomination_code ?? "").trim().toUpperCase().startsWith("D");
+  const digitalBlock = isDigitalBlock ? `\n${SPEECH_DIGITAL_FRAMEWORK}\n` : "";
   const grammarTable = `ПАДЕЖИ НАГРАДЫ — ИСПОЛЬЗУЙ ТОЛЬКО ЭТИ ФОРМЫ:
   • после «поставил кейсу …» / «получает …» / «получит …» / «тянет на …»
     (винительный падеж):  «${forms.acc}»
@@ -204,7 +279,7 @@ function buildSystemPrompt(args: BuildSpeechArgs): string {
   ✅ ВЕРНО:  «поставил кейсу ${forms.acc}» / «заслуживает ${forms.gen}»`;
 
   return `${PERSONA}
-
+${digitalBlock}
 ФИНАЛЬНЫЙ ВЕРДИКТ (использовать в речи):
   Награда: ${AWARD_RU[args.award_level]}
   Балл: ${args.total_score.toFixed(1)} / 10
@@ -540,15 +615,39 @@ export async function generateAvatarSpeech(
         // Strip vague-praise adjectives (replacing them with neutral words
         // breaks Russian case agreement). Keep the LONGTERM rewrite as a
         // contentful substitution since it's a whole-phrase replacement.
+        // Adjective case suffixes — covers all six cases × three genders × plural.
+        // For -ый/-ой/-ий type adjectives (most common).
+        // Includes the previously missed instrumental (-ым) and prepositional (-ом).
+        const ADJ_ENDINGS = "(?:ый|ой|ий|ая|ое|ее|ые|ие|ого|его|ой|ему|ому|ым|им|ыми|ими|ую|юю|ом|ем|ых|их)";
         const VAGUE: RegExp[] = [
-          /(?<![а-яё])уникальн(?:ый|ая|ое|ые|ого|ой|ому|ыми|ую)\s*/giu,
-          /(?<![а-яё])беспрецедентн(?:ый|ая|ое|ые|ого|ой|ую)\s*/giu,
-          /(?<![а-яё])революционн(?:ый|ая|ое|ые|ого|ой|ую)\s*/giu,
-          /(?<![а-яё])прорывн(?:ой|ая|ое|ые|ого|ой|ую)\s*/giu,
-          /(?<![а-яё])выдающ(?:ийся|аяся|ееся|иеся|егося|ейся)\s*/giu,
-          /(?<![а-яё])феноменальн(?:ый|ая|ое|ые|ого|ой|ую)\s*/giu,
-          /(?<![а-яё])грандиозн(?:ый|ая|ое|ые|ого|ой|ую)\s*/giu,
-          /(?<![а-яё])впечатляющ(?:ий|ая|ее|ие|его|ей|ую)\s*/giu,
+          // Original Layer-2 list (top offenders from feedback).
+          new RegExp(`(?<![а-яё])уникальн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])беспрецедентн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])революционн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])прорывн${ADJ_ENDINGS}\\s*`, "giu"),
+          /(?<![а-яё])выдающ(?:ийся|аяся|ееся|иеся|егося|ейся|имся)\s*/giu,
+          new RegExp(`(?<![а-яё])феноменальн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])грандиозн${ADJ_ENDINGS}\\s*`, "giu"),
+          /(?<![а-яё])впечатляющ(?:ий|ая|ее|ие|его|ей|ую|им|ими)\s*/giu,
+          // Substitutes the model started using once the top offenders were
+          // scrubbed. Measured empirically: 12/10/6 hits across 8 cases.
+          new RegExp(`(?<![а-яё])оригинальн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])значительн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])значим${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])инновационн${ADJ_ENDINGS}\\s*`, "giu"),
+          // Other generic-praise adjectives commonly used by the model.
+          /(?<![а-яё])(?:ярк(?:ий|ая|ое|ие|ого|ой|ому|им|ими|ую|ом))\s*/giu,
+          new RegExp(`(?<![а-яё])мощн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])серьёзн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])серьезн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])успешн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])существенн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])заметн${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])мастерск${ADJ_ENDINGS}\\s*`, "giu"),
+          new RegExp(`(?<![а-яё])качественн${ADJ_ENDINGS}\\s*`, "giu"),
+          /(?<![а-яё])глубок(?:ий|ая|ое|ие|ого|ой|ому|им|ими|ую|ом)\s*/giu,
+          /(?<![а-яё])сильнейш(?:ий|ая|ее|ие|его|ей|ую|им|ими)\s*/giu,
+          new RegExp(`(?<![а-яё])гениальн${ADJ_ENDINGS}\\s*`, "giu"),
         ];
         const LONGTERM: RegExp[] = [
           /не\s+хватает\s+долгосрочн(ых|ого|ой)\s+(бизнес-)?результат(ов|ат[аеу])/giu,

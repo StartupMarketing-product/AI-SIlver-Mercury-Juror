@@ -10,6 +10,7 @@ import {
 import { getAnchorsHash } from "./anchorsLoader.js";
 import { runL2 } from "./l2.js";
 import { runCritic, applyCriticDeltas } from "./critic.js";
+import { applyResultsEvidenceCap } from "./resultsEvidenceCap.js";
 import { generateAvatarSpeech } from "./avatarSpeech.js";
 
 /**
@@ -49,12 +50,12 @@ export async function runAnalysis(bundle: CaseBundle): Promise<CoreOutput> {
     ? await runCritic(bundle, l2Result, apiKey)
     : { applied: false, deltas: [], extra_fatal_findings: [] as string[], prompt_hash: "sha256-disabled" };
 
-  if (critic.applied && critic.deltas.length > 0) {
-    const newScores = applyCriticDeltas(l2Result.criteria_scores, critic.deltas);
-    l2Result.criteria_scores = newScores;
-    // Recompute block_score from the downgraded criteria.
+  // Helper: recompute block_score / total_score / award_level from the
+  // current criteria_scores list. Both the critic pass and the mechanical
+  // Results-evidence cap call this when they modify scores.
+  const recomputeAggregates = () => {
     const weights = resolveCriterionWeights(block, nomination);
-    const byId = new Map(newScores.map((c) => [c.criterion, c.score]));
+    const byId = new Map(l2Result.criteria_scores.map((c) => [c.criterion, c.score]));
     let total = 0;
     let totalWeight = 0;
     for (const { id, weight } of weights) {
@@ -71,6 +72,35 @@ export async function runAnalysis(bundle: CaseBundle): Promise<CoreOutput> {
       l2Result.total_score = l2Result.block_score;
     }
     l2Result.award_level = scoreToAwardLevel(l2Result.total_score);
+  };
+
+  if (critic.applied && critic.deltas.length > 0) {
+    l2Result.criteria_scores = applyCriticDeltas(l2Result.criteria_scores, critic.deltas);
+    recomputeAggregates();
+  }
+
+  // Mechanical Results-evidence cap (Block D only).
+  //
+  // Runs AFTER critic so the cap can fire on the post-critic score (i.e.,
+  // even if critic already lowered Results, this checks whether the rationale
+  // still has any numbers / business-metric vocabulary).
+  //
+  // Asymmetric: this can only LOWER the score. Doesn't fire if Results is
+  // already at or below the cap. Doesn't fire if the rationale has at least
+  // one number or one first/second-priority metric name.
+  const resultsCap = applyResultsEvidenceCap(l2Result.criteria_scores, block.code);
+  if (resultsCap.report.applied && resultsCap.report.delta) {
+    l2Result.criteria_scores = resultsCap.scores;
+    l2Result.caps_applied = [
+      ...(l2Result.caps_applied ?? []),
+      {
+        criterion: resultsCap.report.delta.criterion,
+        original_score: resultsCap.report.delta.l2_score,
+        capped_score: resultsCap.report.delta.capped_score,
+        reason: resultsCap.report.delta.reason,
+      },
+    ];
+    recomputeAggregates();
   }
 
   const consistency_check_passed = checkConsistency(l2Result);
