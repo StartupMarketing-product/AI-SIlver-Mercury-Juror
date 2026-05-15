@@ -606,6 +606,48 @@ export async function generateAvatarSpeech(
       parsed.short = ensureAwardOnce(parsed.short);
       parsed.long = ensureAwardOnce(parsed.long);
 
+      // Expand «п.п.» / «пп» abbreviations into «процентных пунктов» (or the
+      // correct declension based on the preceding number). The avatar reads the
+      // speech aloud, and "пэ-пэ" sounds opaque — listeners can't tell whether
+      // it means "percentage points" or "points percent" or a name. So we
+      // always spell it out.
+      //
+      // Russian declension after a number ending in:
+      //   1 (except 11)         → "процентный пункт"  (singular)
+      //   2-4 (except 12-14)    → "процентных пункта" (paucal genitive)
+      //   else (5-20, 0, etc.)  → "процентных пунктов" (plural genitive)
+      const pickPunktForm = (numStr: string): string => {
+        // Fractionals always take paucal genitive ("1,5 процентных пункта").
+        if (/[.,]/.test(numStr)) return "процентных пункта";
+        const n = Number(numStr);
+        if (!Number.isFinite(n)) return "процентных пунктов";
+        const last2 = Math.abs(Math.trunc(n)) % 100;
+        const last = last2 % 10;
+        if (last2 >= 11 && last2 <= 14) return "процентных пунктов";
+        if (last === 1) return "процентный пункт";
+        if (last >= 2 && last <= 4) return "процентных пункта";
+        return "процентных пунктов";
+      };
+      const expandPercentagePoints = (text: string): string => {
+        if (!text) return text;
+        // Match: <number> <space?> <п.п.|п. п.|пп|p.p.|p p.|pp> as long as the
+        // abbreviation isn't followed by a Russian/Latin letter (avoid eating
+        // real words like "ппробное"). Decimal separators "," and "." allowed.
+        const RE = /(\d+(?:[.,]\d+)?)\s*(?:п\s*\.\s*п\s*\.?|пп(?![а-яёa-z])|p\s*\.\s*p\s*\.?|pp(?![a-zа-яё]))/giu;
+        return text.replace(RE, (_match, numStr: string) => {
+          return `${numStr} ${pickPunktForm(numStr)}`;
+        });
+      };
+
+      parsed.one_paragraph_verdict = expandPercentagePoints(parsed.one_paragraph_verdict);
+      parsed.short = expandPercentagePoints(parsed.short);
+      parsed.long = expandPercentagePoints(parsed.long);
+      parsed.sections.hook = expandPercentagePoints(parsed.sections.hook);
+      parsed.sections.verdict = expandPercentagePoints(parsed.sections.verdict);
+      parsed.sections.steelman = expandPercentagePoints(parsed.sections.steelman);
+      parsed.sections.fatal_flaw = expandPercentagePoints(parsed.sections.fatal_flaw);
+      parsed.sections.close = expandPercentagePoints(parsed.sections.close);
+
       // Layer 2 neuro-slop scrub: same vocabulary/long-term-results filter as
       // applied to L2 rationales (defined in l2.ts but inlined here so the
       // avatarSpeech module stays standalone). Order matters — scrub AFTER the

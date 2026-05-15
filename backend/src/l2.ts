@@ -421,6 +421,35 @@ const LONGTERM_PATTERNS = [
   /долгосрочн(ое|ого)\s+(бизнес-)?(результат|влияние)\s+(не|отсутствует)/giu,
 ];
 
+// Expand «п.п.» (and «пп», «p.p.», «pp») into «процентных пунктов» with
+// correct Russian declension based on the preceding number. The avatar reads
+// rationales aloud via the speech module — "пэ-пэ" sounds opaque. Same
+// expansion logic lives in avatarSpeech.ts.
+//
+// Declension after a number ending in:
+//   1 (except 11)         → "процентный пункт"  (singular)
+//   2-4 (except 12-14)    → "процентных пункта" (paucal genitive)
+//   else (5-20, 0, etc.)  → "процентных пунктов" (plural genitive)
+function pickPunktForm(numStr: string): string {
+  // Fractional / decimal numbers always take paucal-genitive ("1,5 процентных пункта").
+  if (/[.,]/.test(numStr)) return "процентных пункта";
+  const n = Number(numStr);
+  if (!Number.isFinite(n)) return "процентных пунктов";
+  const last2 = Math.abs(Math.trunc(n)) % 100;
+  const last = last2 % 10;
+  if (last2 >= 11 && last2 <= 14) return "процентных пунктов";
+  if (last === 1) return "процентный пункт";
+  if (last >= 2 && last <= 4) return "процентных пункта";
+  return "процентных пунктов";
+}
+const PERCENTAGE_POINTS_RE = /(\d+(?:[.,]\d+)?)\s*(?:п\s*\.\s*п\s*\.?|пп(?![а-яёa-z])|p\s*\.\s*p\s*\.?|pp(?![a-zа-яё]))/giu;
+function expandPercentagePoints(text: string): string {
+  if (!text) return text;
+  return text.replace(PERCENTAGE_POINTS_RE, (_m, numStr: string) => {
+    return `${numStr} ${pickPunktForm(numStr)}`;
+  });
+}
+
 function scrubNeuroSlop(text: string): string {
   if (!text) return text;
   let out = text;
@@ -430,6 +459,7 @@ function scrubNeuroSlop(text: string): string {
   for (const re of LONGTERM_PATTERNS) {
     out = out.replace(re, "не хватает измеримых результатов в текущем периоде кампании");
   }
+  out = expandPercentagePoints(out);
   // Collapse any double spaces / awkward punctuation introduced by replacements.
   out = out.replace(/\s+/g, " ").replace(/\s+([.,;:!?])/g, "$1").trim();
   return out;
