@@ -369,14 +369,25 @@ app.post("/api/admin/import-json", moderatorAuth, upload.single("file"), async (
 
     for (const nom of nominations) {
       const code = (nom?.code ?? "").toUpperCase();
+      // The festival JSON has been observed in two shapes:
+      //   • old (SM_2025, SM_2026_sample8):  projects is an ARRAY
+      //   • new (SM_2026_1stage):           projects is an OBJECT
+      //     keyed by index ({"1": {...}, "3": {...}, ...})
+      // Normalise to a plain array so the rest of the import loop doesn't
+      // need to care which shape arrived.
+      const projectsList: any[] = Array.isArray(nom?.projects)
+        ? nom.projects
+        : nom?.projects && typeof nom.projects === "object"
+          ? Object.values(nom.projects)
+          : [];
       if (!TARGET_NOMINATIONS.has(code)) {
-        skippedNotInTarget += Array.isArray(nom?.projects) ? nom.projects.length : 0;
+        skippedNotInTarget += projectsList.length;
         continue;
       }
       const blockId = String(nom?.block_id ?? "53");
       const year = String(nom?.year ?? new Date().getFullYear());
 
-      for (const p of nom?.projects ?? []) {
+      for (const p of projectsList) {
         scanned++;
         const projectId = p?.project_id ?? p?.id;
         if (!projectId) continue;
