@@ -229,6 +229,16 @@ export default function GrandModerator() {
 
   async function handleApproveAndRender() {
     if (!selected) return;
+    // If a video already exists, ask before kicking another HeyGen render —
+    // that's a real cost. But don't outright block: the moderator may have
+    // edited the script and wants the new version rendered.
+    if (selected.avatar_status === "ready") {
+      const ok = window.confirm(
+        "Видео для этого кейса уже сгенерировано. Запустить рендер ещё раз? " +
+        "Это потратит кредиты HeyGen и заменит текущее видео."
+      );
+      if (!ok) return;
+    }
     setBusy("approve");
     setError(null);
     try {
@@ -750,8 +760,7 @@ export default function GrandModerator() {
                 disabled={
                   busy !== null ||
                   !selected.avatar_script ||
-                  selected.avatar_status === "rendering" ||
-                  selected.avatar_status === "ready"
+                  selected.avatar_status === "rendering"
                 }
                 style={{
                   padding: "10px 20px",
