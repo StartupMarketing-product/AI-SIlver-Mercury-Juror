@@ -26,7 +26,7 @@ const HEYGEN_API_BASE = "https://api.heygen.com";
 // This is important because dotenv parses `HEYGEN_VOICE_ID=` as "" not undefined,
 // and HeyGen rejects empty voice_id with "Voice not found".
 const DEFAULT_AVATAR_ID = (process.env.HEYGEN_AVATAR_ID || "").trim() || "ae1759f2b3d046e38baf250403b53aef";
-const DEFAULT_VOICE_ID = (process.env.HEYGEN_VOICE_ID || "").trim() || "c458964dc4264b70a867b2ebcf36b51e";
+const DEFAULT_VOICE_ID = (process.env.HEYGEN_VOICE_ID || "").trim() || "6a466c75a2e345c9b9c716d7a6100a44";
 const DEFAULT_CHARACTER_TYPE: CharacterType =
   ((process.env.HEYGEN_CHARACTER_TYPE || "").trim().toLowerCase() === "talking_photo")
     ? "talking_photo"
