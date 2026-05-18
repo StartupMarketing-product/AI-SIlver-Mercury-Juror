@@ -154,6 +154,69 @@ function scrubForbidden(text: string): string {
   return out.replace(/\s+([.,;:!?])/g, "$1").replace(/ +/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
 
+/** Russian-word stems for medal mentions. We deliberately stop short of full
+ *  morphology — the stem matches all common case/gender forms while still
+ *  being narrow enough to avoid catching unrelated words. */
+const MEDAL_STEM: Record<string, string> = {
+  gold: "золот",
+  silver: "серебр",
+  bronze: "бронз",
+};
+const MEDAL_NAME_RU: Record<string, string> = {
+  gold: "золото",
+  silver: "серебро",
+  bronze: "бронза",
+  shortlist: "шорт-лист",
+  longlist: "лонг-лист",
+};
+
+/** Strip morphology+punctuation so we can locate a project name in arbitrary
+ *  case-form / quote-style. Lower-cases, replaces «»"'„" with spaces, strips
+ *  punctuation, collapses whitespace. */
+function normalizeForSearch(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[«»""„'`]/g, " ")
+    .replace(/[.,;:!?\-—()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Verify each case's medal mention in the speech matches its actual
+ *  award_level. We find the project name in the speech (normalized) and scan a
+ *  window of ~400 chars after the mention for any medal stem. If a *wrong*
+ *  medal stem appears in the window, that's a mismatch.
+ *
+ *  Returns a list of human-readable mismatch strings for the retry prompt. */
+function findMedalMismatches(speech: string, verdicts: VerdictForSummary[]): string[] {
+  const speechNorm = normalizeForSearch(speech);
+  const mismatches: string[] = [];
+
+  for (const v of verdicts) {
+    const expectedStem = MEDAL_STEM[v.award_level];
+    if (!expectedStem) continue; // shortlist/longlist — not stem-checked here
+
+    // Use the first ~30 chars of the project name as a search key.
+    const nameKey = normalizeForSearch(v.project_name).slice(0, 30);
+    if (!nameKey) continue;
+    const idx = speechNorm.indexOf(nameKey);
+    if (idx < 0) continue; // case wasn't mentioned by name — skip
+
+    // Look at a window of ~400 normalized chars after the name mention.
+    const window = speechNorm.slice(idx, idx + 400);
+    const wrongStems = Object.entries(MEDAL_STEM)
+      .filter(([level, stem]) => level !== v.award_level && new RegExp(`\\b${stem}`, "u").test(window))
+      .map(([level]) => MEDAL_NAME_RU[level]);
+
+    if (wrongStems.length > 0) {
+      mismatches.push(
+        `«${v.project_name}» — балл ${v.total_score.toFixed(1)}, по шкале ${MEDAL_NAME_RU[v.award_level]}, но в речи рядом с упоминанием появилось: ${wrongStems.join(", ")}.`
+      );
+    }
+  }
+  return mismatches;
+}
+
 export async function generateSummarySpeech(
   nominationCode: string,
   apiKey: string | undefined
@@ -187,26 +250,60 @@ export async function generateSummarySpeech(
   }
 
   const sys = `${SPEECH_PERSONA}\n\n${SUMMARY_OUTLINE}`;
-  const user = `${buildPrompt(nominationCode, verdicts)}\n\nНапиши сводное выступление по всей номинации согласно структуре. Длина обязательно не более 160 слов (около одной минуты вслух). Только текст речи, без вводных и без подписи.`;
+  const baseUser = `${buildPrompt(nominationCode, verdicts)}\n\nНапиши сводное выступление по всей номинации согласно структуре. Длина обязательно не более 160 слов (около одной минуты вслух). Только текст речи, без вводных и без подписи.
+
+ПОРЯДОК ДЕЙСТВИЙ ВНУТРИ ТЕБЯ (не выводить, только использовать):
+1. Возьми список кейсов. Для КАЖДОГО проговори вслух про себя: «балл (число) — по шкале это (медаль из шкалы). Поле «Награда» в данных говорит то же.»
+2. Только после этой проверки начинай писать прозу.
+3. В прозе называй медали ТОЛЬКО так, как указано в поле «Награда» из данных. Не пересчитывай.`;
 
   const modelId = process.env.OPENAI_SPEECH_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4o";
-  const promptHash = "sha256-" + createHash("sha256").update(sys + user).digest("hex").slice(0, 16);
+  const promptHash = "sha256-" + createHash("sha256").update(sys + baseUser).digest("hex").slice(0, 16);
 
   const client = new OpenAI({ apiKey });
-  const res = await client.chat.completions.create({
-    model: modelId,
-    temperature: 0.4,
-    max_tokens: 600,
-    messages: [
-      { role: "system", content: sys },
-      { role: "user", content: user },
-    ],
-  });
-  const raw = res.choices?.[0]?.message?.content?.trim();
-  if (!raw) throw new Error("Empty response from OpenAI");
-  const cleaned = scrubForbidden(raw);
 
-  return { speech_text: cleaned, prompt_hash: promptHash, model_id: modelId };
+  // Up to 3 attempts: initial generation + up to 2 corrective retries when the
+  // programmatic check finds a medal/score mismatch.
+  let bestSpeech = "";
+  let lastMismatches: string[] = [];
+  let userMsg = baseUser;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await client.chat.completions.create({
+      model: modelId,
+      temperature: attempt === 0 ? 0.4 : 0.2, // tighten on retry
+      max_tokens: 600,
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: userMsg },
+      ],
+    });
+    const raw = res.choices?.[0]?.message?.content?.trim();
+    if (!raw) throw new Error("Empty response from OpenAI");
+    const cleaned = scrubForbidden(raw);
+    bestSpeech = cleaned;
+
+    const mismatches = findMedalMismatches(cleaned, verdicts);
+    if (mismatches.length === 0) {
+      return { speech_text: cleaned, prompt_hash: promptHash, model_id: modelId };
+    }
+    lastMismatches = mismatches;
+
+    // Retry with explicit correction instructions.
+    userMsg = `${baseUser}
+
+ТВОЯ ПРЕДЫДУЩАЯ ПОПЫТКА содержала ошибки в медалях. Найденные несоответствия:
+${mismatches.map((m) => `• ${m}`).join("\n")}
+
+Перепиши речь, ВЕРНО назвав медаль для каждого кейса согласно шкале наград и полю «Награда» из данных. Остальное содержание можешь сохранить.`;
+  }
+
+  // After 3 attempts still failing — log to console for ops visibility and
+  // return the last output anyway (the user can edit text manually).
+  console.warn(
+    `[nominationSummary] ${nominationCode}: medal verification failed after 3 attempts. Mismatches:\n${lastMismatches.join("\n")}`
+  );
+  return { speech_text: bestSpeech, prompt_hash: promptHash, model_id: modelId };
 }
 
 export async function upsertSummary(
