@@ -181,42 +181,56 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Сводное выступление — currently only D10. The button sits directly
-          under the row of nomination cards. Other nominations will get the
-          same treatment once we're happy with the format. */}
+      {/* Сводное выступление — D10, D13, D15. One card per nomination. Each
+          links to /nomination-summary/<code> where the speech is generated
+          and the avatar video is rendered. */}
       <section style={{ marginBottom: 36 }}>
         <SectionLabel>Сводное выступление по номинации</SectionLabel>
-        <Link
-          to="/nomination-summary/D10"
-          className="card"
+        <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            color: "var(--fg-primary)",
-            padding: "20px 24px",
-            background:
-              "linear-gradient(135deg, rgba(159,102,255,0.18), rgba(63,174,255,0.10) 60%, transparent)",
-            border: "1px solid var(--border-strong)",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: 14,
           }}
         >
-          <div>
-            <span
-              className="chip"
+          {[
+            { code: "D10", name: "Лучшее использование ИИ", accent: "var(--accent-purple)", rgba: "159,102,255" },
+            { code: "D13", name: "Лучшее использование данных", accent: "var(--accent-magenta)", rgba: "230,97,217" },
+            { code: "D15", name: "Лучшая цифровая платформа", accent: "var(--accent-mint)", rgba: "94,222,184" },
+          ].map((c) => (
+            <Link
+              key={c.code}
+              to={`/nomination-summary/${c.code}`}
+              className="card"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                color: "var(--accent-purple)",
-                marginRight: 12,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                color: "var(--fg-primary)",
+                padding: "20px 22px",
+                background: `linear-gradient(135deg, rgba(${c.rgba},0.18), rgba(63,174,255,0.08) 60%, transparent)`,
+                border: "1px solid var(--border-strong)",
               }}
             >
-              D10
-            </span>
-            <span style={{ fontSize: "1.05rem", fontWeight: 600 }}>
-              Сводное выступление аватара по всем кейсам D10
-            </span>
-          </div>
-          <ArrowCircle />
-        </Link>
+              <div>
+                <span
+                  className="chip"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    color: c.accent,
+                    marginRight: 12,
+                  }}
+                >
+                  {c.code}
+                </span>
+                <span style={{ fontSize: "1rem", fontWeight: 600 }}>
+                  Сводное выступление по {c.code}
+                </span>
+              </div>
+              <ArrowCircle />
+            </Link>
+          ))}
+        </div>
       </section>
 
       <p style={{ fontSize: "0.78rem", color: "var(--fg-tertiary)", marginTop: 32 }}>
