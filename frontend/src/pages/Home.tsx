@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import AvatarPlayerModal from "../components/AvatarPlayerModal";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
+const API_BASE = API_URL.replace(/\/$/, "");
 
 const CATEGORIES = [
   { code: "D01", name: "Лучшая цифровая кампания", accent: "var(--accent-cyan)" },
@@ -17,17 +19,82 @@ const CATEGORIES = [
  */
 export default function Home() {
   const [health, setHealth] = useState<{ ok?: boolean } | null>(null);
+  const [greetingUrl, setGreetingUrl] = useState<string | null>(null);
+  const [greetingStatus, setGreetingStatus] = useState<string | null>(null);
+  const [greetingOpen, setGreetingOpen] = useState(false);
 
   useEffect(() => {
     const url = API_URL ? `${API_URL.replace(/\/$/, "")}/health` : "/health";
     fetch(url).then((r) => r.json()).then(setHealth).catch(() => setHealth({ ok: false }));
   }, []);
 
+  // Fetch greeting video metadata on mount so the button knows whether the
+  // video is ready to play. Fails silently if backend is unreachable.
+  useEffect(() => {
+    fetch(`${API_BASE}/api/nominations/GREETING/summary`)
+      .then((r) => r.json())
+      .then((j) => {
+        const s = j?.summary;
+        if (s) {
+          setGreetingUrl(s.avatar_video_url ?? null);
+          setGreetingStatus(s.avatar_status ?? null);
+        }
+      })
+      .catch(() => {/* ignore */});
+  }, []);
+
+  function handleGreetingClick() {
+    if (greetingUrl) {
+      setGreetingOpen(true);
+    } else if (greetingStatus === "rendering") {
+      alert("Видео ещё рендерится, попробуйте через минуту.");
+    } else {
+      alert("Видео ещё не готово. Зайдите на /nomination-summary/GREETING и нажмите «Сгенерировать видео».");
+    }
+  }
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
       {/* Hero — chip-style headline echoing the Sber "Больше / чем / маркетинг" composition */}
       <section style={{ padding: "60px 0 56px" }}>
         <ChipHeadline />
+      </section>
+
+      {/* Avatar greeting — single bright card that plays the 20s intro video */}
+      <section style={{ marginBottom: 36 }}>
+        <SectionLabel>Знакомство с аватаром</SectionLabel>
+        <button
+          onClick={handleGreetingClick}
+          className="card"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            color: "var(--fg-primary)",
+            padding: "24px 28px",
+            background:
+              "linear-gradient(135deg, rgba(63,174,255,0.18), rgba(159,102,255,0.10) 60%, transparent)",
+            border: "1px solid var(--border-strong)",
+            cursor: "pointer",
+            width: "100%",
+            textAlign: "left",
+            font: "inherit",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: 4 }}>
+              Приветствие аватара
+            </div>
+            <div style={{ color: "var(--fg-secondary)", fontSize: "0.92rem" }}>
+              {greetingUrl
+                ? "20-секундное видео — кто такой аватар и что он умеет"
+                : greetingStatus === "rendering"
+                ? "Видео рендерится…"
+                : "Видео ещё не готово"}
+            </div>
+          </div>
+          <ArrowCircle />
+        </button>
       </section>
 
       {/* Grand Moderator — single hero card */}
@@ -155,6 +222,13 @@ export default function Home() {
       <p style={{ fontSize: "0.78rem", color: "var(--fg-tertiary)", marginTop: 32 }}>
         API: {health?.ok ? "подключён" : health === null ? "проверка…" : "не доступен"}
       </p>
+
+      <AvatarPlayerModal
+        open={greetingOpen}
+        videoUrl={greetingUrl}
+        projectName="Приветствие аватара"
+        onClose={() => setGreetingOpen(false)}
+      />
     </div>
   );
 }
