@@ -70,6 +70,30 @@ export async function getCaseFileSignedUrl(path: string, ttlSeconds: number = SI
   return data.signedUrl;
 }
 
+/**
+ * Download an MP4 from a (typically short-lived) HeyGen URL and upload it
+ * into the `renders` bucket so we keep a permanent copy. HeyGen URLs expire
+ * after ~7 days; the Supabase public URL does not.
+ *
+ * `key` is the path inside the bucket — e.g. "summary/D10/<timestamp>.mp4"
+ * or "verdict/<verdict_id>.mp4". Uses upsert so re-renders overwrite cleanly.
+ * Returns the public Supabase URL ready to put in `<video src=…>`.
+ */
+export async function persistRenderFromUrl(sourceUrl: string, key: string): Promise<string> {
+  const sb = getSupabase();
+  const res = await fetch(sourceUrl);
+  if (!res.ok) throw new Error(`render download ${res.status} for ${sourceUrl.slice(0, 80)}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const { error } = await sb.storage.from(RENDERS_BUCKET).upload(key, buf, {
+    contentType: "video/mp4",
+    upsert: true,
+  });
+  if (error) throw new Error(`storage upload (${key}): ${error.message}`);
+  const { data } = sb.storage.from(RENDERS_BUCKET).getPublicUrl(key);
+  if (!data?.publicUrl) throw new Error(`no public url for ${key}`);
+  return data.publicUrl;
+}
+
 /** Best-effort delete of all files for a case (used on retention cleanup). */
 export async function deleteCaseFiles(caseId: string): Promise<void> {
   const sb = getSupabase();

@@ -28,7 +28,7 @@ import {
   generateSummarySpeech, getSummary, upsertSummary,
   listRenderingSummaries, setSummaryAvatarVideo,
 } from "./nominationSummary.js";
-import { uploadCaseFile, type StoredFileRef } from "./storage.js";
+import { uploadCaseFile, persistRenderFromUrl, type StoredFileRef } from "./storage.js";
 import { buildCaseBundle } from "./ingestion.js";
 import { runAnalysis } from "./runAnalysis.js";
 import { resolveNomination } from "./caseLookup.js";
@@ -808,7 +808,16 @@ async function pollHeyGenOnce(): Promise<void> {
     try {
       const s = await heygenGetVideoStatus(v.avatar_video_id);
       if (s.status === "completed" && s.video_url) {
-        await setVerdictAvatarVideo(v.id, { status: "ready", url: s.video_url, error: null });
+        // Persist the mp4 to Supabase Storage so the URL doesn't expire.
+        // If the upload fails for any reason, fall back to the HeyGen URL —
+        // worse but at least the verdict is viewable for the next ~7 days.
+        let finalUrl = s.video_url;
+        try {
+          finalUrl = await persistRenderFromUrl(s.video_url, `verdict/${v.id}.mp4`);
+        } catch (e) {
+          console.warn(`[heygen-poll] persist failed for verdict ${v.id}: ${(e as Error).message}; using HeyGen URL`);
+        }
+        await setVerdictAvatarVideo(v.id, { status: "ready", url: finalUrl, error: null });
         console.log(`[heygen-poll] verdict ${v.id.slice(0, 8)} → ready`);
       } else if (s.status === "failed") {
         await setVerdictAvatarVideo(v.id, { status: "failed", error: s.error ?? "HeyGen render failed" });
@@ -828,8 +837,20 @@ async function pollHeyGenOnce(): Promise<void> {
       try {
         const st = await heygenGetVideoStatus(s.heygen_video_id);
         if (st.status === "completed" && st.video_url) {
+          // Persist to Supabase Storage so the URL doesn't expire. The key
+          // is deterministic per nomination_code — re-renders overwrite the
+          // same blob, so we never accumulate stale files.
+          let finalUrl = st.video_url;
+          try {
+            finalUrl = await persistRenderFromUrl(
+              st.video_url,
+              `summary/${s.nomination_code}.mp4`,
+            );
+          } catch (e) {
+            console.warn(`[heygen-poll] persist failed for summary ${s.nomination_code}: ${(e as Error).message}; using HeyGen URL`);
+          }
           await setSummaryAvatarVideo(s.nomination_code, {
-            status: "ready", video_url: st.video_url, error: null,
+            status: "ready", video_url: finalUrl, error: null,
           });
           console.log(`[heygen-poll] summary ${s.nomination_code} → ready`);
         } else if (st.status === "failed") {
