@@ -4,6 +4,7 @@ import Upload from "./pages/Upload";
 import Results from "./pages/Results";
 import GrandModerator from "./pages/GrandModerator";
 import Moderator from "./pages/Moderator";
+import NominationSummary from "./pages/NominationSummary";
 
 /**
  * Top-level layout. Header mirrors sbermarketing.ru: small text-link nav on
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/results" element={<Results />} />
           <Route path="/grand" element={<GrandModerator />} />
           <Route path="/moderator/:category" element={<Moderator />} />
+          <Route path="/nomination-summary/:code" element={<NominationSummary />} />
         </Routes>
       </main>
     </div>

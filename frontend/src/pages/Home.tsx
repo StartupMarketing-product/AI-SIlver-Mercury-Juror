@@ -114,6 +114,56 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Сводное выступление — currently only D10. The button sits directly
+          under the row of nomination cards. Other nominations will get the
+          same treatment once we're happy with the format. */}
+      <section style={{ marginBottom: 36 }}>
+        <SectionLabel>Сводное выступление по номинации</SectionLabel>
+        <Link
+          to="/nomination-summary/D10"
+          className="card"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            color: "var(--fg-primary)",
+            padding: "20px 24px",
+            background:
+              "linear-gradient(135deg, rgba(159,102,255,0.18), rgba(63,174,255,0.10) 60%, transparent)",
+            border: "1px solid var(--border-strong)",
+          }}
+        >
+          <div>
+            <span
+              className="chip"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                color: "var(--accent-purple)",
+                marginRight: 12,
+              }}
+            >
+              D10
+            </span>
+            <span style={{ fontSize: "1.05rem", fontWeight: 600 }}>
+              Сводное выступление аватара по всем кейсам D10
+            </span>
+            <div
+              style={{
+                color: "var(--fg-secondary)",
+                fontSize: "0.9rem",
+                marginTop: 6,
+                lineHeight: 1.5,
+                maxWidth: 720,
+              }}
+            >
+              Один монолог на 3–4 минуты по всей номинации: лидеры, бронза, общий
+              паттерн и почему ни один не золото. Текст и видео — на следующей странице.
+            </div>
+          </div>
+          <ArrowCircle />
+        </Link>
+      </section>
+
       <p style={{ fontSize: "0.78rem", color: "var(--fg-tertiary)", marginTop: 32 }}>
         API: {health?.ok ? "подключён" : health === null ? "проверка…" : "не доступен"}
       </p>

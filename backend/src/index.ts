@@ -24,6 +24,10 @@ import {
   getVerdictAvatarScript,
 } from "./db.js";
 import { createVideo as heygenCreateVideo, getVideoStatus as heygenGetVideoStatus } from "./heygen.js";
+import {
+  generateSummarySpeech, getSummary, upsertSummary,
+  listRenderingSummaries, setSummaryAvatarVideo,
+} from "./nominationSummary.js";
 import { uploadCaseFile, type StoredFileRef } from "./storage.js";
 import { buildCaseBundle } from "./ingestion.js";
 import { runAnalysis } from "./runAnalysis.js";
@@ -610,6 +614,90 @@ app.post("/api/admin/cases/:id/approve-and-render", moderatorAuth, async (req, r
  * as videos finish. Use this from the Grand Moderator screen to avoid clicking
  * "Запустить рендер" on each row individually.
  */
+/**
+ * GET /api/nominations/:code/summary
+ * Returns current state of the nomination-level summary speech (text + video).
+ * Public read so the Home page can show «Готово / Не готово» without auth.
+ */
+app.get("/api/nominations/:code/summary", async (req, res) => {
+  try {
+    const code = req.params.code.toUpperCase();
+    const row = await getSummary(code);
+    res.json({ ok: true, nomination_code: code, summary: row });
+  } catch (e) {
+    res.status(500).json({ error: "summary fetch failed", detail: String((e as Error).message) });
+  }
+});
+
+/**
+ * POST /api/admin/nominations/:code/summary/generate
+ * Generates the speech text from current verdicts in the nomination.
+ * Saves it to nomination_summaries (creates row if absent). Does NOT render
+ * the video — that's a separate step so the moderator can review the text.
+ */
+app.post("/api/admin/nominations/:code/summary/generate", moderatorAuth, async (req, res) => {
+  try {
+    const code = req.params.code.toUpperCase();
+    const { speech_text, prompt_hash, model_id } = await generateSummarySpeech(
+      code,
+      process.env.OPENAI_API_KEY
+    );
+    const row = await upsertSummary(code, {
+      speech_text,
+      prompt_hash,
+      model_id,
+      // Reset any prior render state — the text changed.
+      heygen_video_id: null,
+      avatar_video_url: null,
+      avatar_status: "pending",
+      avatar_error: null,
+      speech_generated_at: new Date().toISOString(),
+    });
+    res.json({ ok: true, summary: row });
+  } catch (e) {
+    res.status(500).json({ error: "generate failed", detail: String((e as Error).message) });
+  }
+});
+
+/**
+ * POST /api/admin/nominations/:code/summary/render
+ * Submits the saved speech text to HeyGen. Fire-and-forget — the poller
+ * picks up the result and writes the URL back.
+ */
+app.post("/api/admin/nominations/:code/summary/render", moderatorAuth, async (req, res) => {
+  try {
+    const code = req.params.code.toUpperCase();
+    const row = await getSummary(code);
+    if (!row || !row.speech_text || !row.speech_text.trim()) {
+      return res.status(400).json({ error: "no speech_text — generate first" });
+    }
+    let videoId: string | null = null;
+    let renderError: string | null = null;
+    try {
+      videoId = await heygenCreateVideo(row.speech_text);
+      await upsertSummary(code, {
+        heygen_video_id: videoId,
+        avatar_status: "rendering",
+        avatar_error: null,
+        avatar_updated_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      renderError = String((e as Error).message);
+      await upsertSummary(code, {
+        avatar_status: "failed",
+        avatar_error: renderError,
+        avatar_updated_at: new Date().toISOString(),
+      });
+    }
+    if (renderError) {
+      return res.status(502).json({ ok: false, error: "HeyGen submission failed", detail: renderError });
+    }
+    res.json({ ok: true, nomination_code: code, avatar_status: "rendering", heygen_video_id: videoId });
+  } catch (e) {
+    res.status(500).json({ error: "render failed", detail: String((e as Error).message) });
+  }
+});
+
 app.post("/api/admin/render-all", moderatorAuth, async (_req, res) => {
   try {
     const all = await listVerdicts({ limit: 1000 });
@@ -706,6 +794,32 @@ async function pollHeyGenOnce(): Promise<void> {
     } catch (e) {
       console.warn(`[heygen-poll] verdict ${v.id} status check failed: ${(e as Error).message}`);
     }
+  }
+
+  // Also poll nomination-level summary renders.
+  try {
+    const renderingSummaries = await listRenderingSummaries();
+    for (const s of renderingSummaries) {
+      if (!s.heygen_video_id) continue;
+      try {
+        const st = await heygenGetVideoStatus(s.heygen_video_id);
+        if (st.status === "completed" && st.video_url) {
+          await setSummaryAvatarVideo(s.nomination_code, {
+            status: "ready", video_url: st.video_url, error: null,
+          });
+          console.log(`[heygen-poll] summary ${s.nomination_code} → ready`);
+        } else if (st.status === "failed") {
+          await setSummaryAvatarVideo(s.nomination_code, {
+            status: "failed", error: st.error ?? "HeyGen render failed",
+          });
+          console.warn(`[heygen-poll] summary ${s.nomination_code} → failed: ${st.error}`);
+        }
+      } catch (e) {
+        console.warn(`[heygen-poll] summary ${s.nomination_code} status check failed: ${(e as Error).message}`);
+      }
+    }
+  } catch (e) {
+    console.warn(`[heygen-poll] listRenderingSummaries failed: ${(e as Error).message}`);
   }
 }
 
