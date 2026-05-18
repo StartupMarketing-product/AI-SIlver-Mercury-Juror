@@ -147,18 +147,6 @@ export default function Home() {
             <span style={{ fontSize: "1.05rem", fontWeight: 600 }}>
               Сводное выступление аватара по всем кейсам D10
             </span>
-            <div
-              style={{
-                color: "var(--fg-secondary)",
-                fontSize: "0.9rem",
-                marginTop: 6,
-                lineHeight: 1.5,
-                maxWidth: 720,
-              }}
-            >
-              Один монолог на 3–4 минуты по всей номинации: лидеры, бронза, общий
-              паттерн и почему ни один не золото. Текст и видео — на следующей странице.
-            </div>
           </div>
           <ArrowCircle />
         </Link>

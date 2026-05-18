@@ -105,6 +105,18 @@ export default function AvatarPlayerModal({
     setStage(SHOW_INTRO ? "intro-1" : "messages");
     setMessageIdx(0);
 
+    // Prime the video element with the click-gesture activation. Without this,
+    // by the time the ~5s intro finishes Chrome decides the activation lapsed
+    // and v.play() rejects unless we mute it. Calling play()+pause() now —
+    // while the modal-opening click is still "fresh" — tells Chrome we have
+    // permission to play this specific <video> with sound later.
+    const vEl = videoRef.current;
+    if (vEl && videoUrl) {
+      vEl.muted = false;
+      vEl.volume = 1;
+      vEl.play().then(() => vEl.pause()).catch(() => {/* primed best-effort */});
+    }
+
     const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     if (SHOW_INTRO) {
@@ -166,15 +178,16 @@ export default function AvatarPlayerModal({
     return () => timeouts.forEach(clearTimeout);
   }, [open, videoUrl]);
 
-  // Try to autoplay video once stage flips to "video"
+  // Autoplay video once stage flips to "video". Because the video element is
+  // primed (play+pause) during the open effect, Chrome has remembered our
+  // permission to play it with sound, so this play() succeeds unmuted.
   useEffect(() => {
     if (stage !== "video") return;
     const v = videoRef.current;
     if (!v) return;
-    v.play().catch(() => {
-      v.muted = true;
-      v.play().catch(() => {/* user must click play control */});
-    });
+    v.muted = false;
+    v.currentTime = 0;
+    v.play().catch(() => {/* extremely unlikely after priming */});
   }, [stage]);
 
   // Keyboard: Esc closes
@@ -333,8 +346,88 @@ export default function AvatarPlayerModal({
         </div>
       )}
 
-      {/* Stage: video + scoreboard split-screen */}
-      {(stage === "video" || stage === "fallback") && (
+      {/* Always-mounted video element: kept in the DOM from the moment the
+          modal opens (just visually hidden until stage === "video") so that
+          the open-effect can prime it with the user-gesture activation. Hiding
+          via opacity+pointerEvents instead of display:none / unmount because
+          some browsers refuse to honour play() on display:none media. */}
+      {videoUrl && (
+        <div
+          aria-hidden={stage !== "video"}
+          style={{
+            position: stage === "video" ? "relative" : "absolute",
+            opacity: stage === "video" ? 1 : 0,
+            pointerEvents: stage === "video" ? "auto" : "none",
+            zIndex: stage === "video" ? 1 : -1,
+            display: "flex",
+            gap: "2.5vw",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "92vw",
+            maxWidth: 1700,
+            height: "85vh",
+          }}
+        >
+          <div
+            style={{
+              flex: showScoreboard ? "0 1 65%" : "1 1 100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              maxHeight: "85vh",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxHeight: "85vh",
+                borderRadius: 8,
+                overflow: "hidden",
+                background: "#000",
+                boxShadow: "0 30px 100px rgba(0,0,0,0.7)",
+                lineHeight: 0,
+                clipPath: "inset(6px 6px 6px 6px)",
+              }}
+            >
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                onEnded={() => {
+                  if (POST_VIDEO_HOLD_MS > 0) {
+                    setTimeout(onClose, POST_VIDEO_HOLD_MS);
+                  } else {
+                    onClose();
+                  }
+                }}
+                onContextMenu={(e) => e.preventDefault()}
+                playsInline
+                preload="auto"
+                disablePictureInPicture
+                controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+                style={{
+                  width: "100%",
+                  maxHeight: "85vh",
+                  background: "#000",
+                  display: "block",
+                  border: "none",
+                  outline: "none",
+                  transform: "scale(1.04)",
+                  transformOrigin: "center center",
+                  pointerEvents: "none",
+                }}
+              />
+            </div>
+          </div>
+
+          {showScoreboard && scoreboard && stage === "video" && (
+            <Scoreboard projectName={projectName} data={scoreboard} />
+          )}
+        </div>
+      )}
+
+      {/* Fallback (no video) — only shown when stage actually reaches the
+          fallback state and there is no videoUrl to play. */}
+      {stage === "fallback" && !videoUrl && (
         <div
           style={{
             display: "flex",
@@ -346,7 +439,6 @@ export default function AvatarPlayerModal({
             height: "85vh",
           }}
         >
-          {/* Left: video or speech-text fallback */}
           <div
             style={{
               flex: showScoreboard ? "0 1 65%" : "1 1 100%",
@@ -356,71 +448,37 @@ export default function AvatarPlayerModal({
               maxHeight: "85vh",
             }}
           >
-            {stage === "video" && videoUrl ? (
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                onEnded={() => {
-                  // Hold the last frame for POST_VIDEO_HOLD_MS so the modal
-                  // doesn't slam shut the moment the avatar stops speaking.
-                  // The video element naturally pauses at end-of-stream so
-                  // the face stays on screen.
-                  if (POST_VIDEO_HOLD_MS > 0) {
-                    setTimeout(onClose, POST_VIDEO_HOLD_MS);
-                  } else {
-                    onClose();
-                  }
-                }}
-                onContextMenu={(e) => e.preventDefault()}
-                playsInline
-                disablePictureInPicture
-                controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
-                style={{
-                  width: "100%",
-                  maxHeight: "85vh",
-                  background: "#000",
-                  borderRadius: 8,
-                  boxShadow: "0 30px 100px rgba(0,0,0,0.7)",
-                  pointerEvents: "none", // no scrubbing / pause — keep the live illusion
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  background: "#1a1a1a",
-                  color: "#eee",
-                  border: "1px solid #333",
-                  borderRadius: 8,
-                  padding: "2rem",
-                  maxWidth: "100%",
-                  maxHeight: "85vh",
-                  overflowY: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                }}
-              >
-                <div style={{ color: "#888", fontSize: "0.85rem", letterSpacing: "0.04em" }}>
-                  ВИДЕО НЕДОСТУПНО — ТЕКСТ ВЫСТУПЛЕНИЯ
-                </div>
-                {projectName && (
-                  <h2 style={{ margin: 0, fontSize: "1.3rem", color: "#fff", fontWeight: 500 }}>
-                    {projectName}
-                  </h2>
-                )}
-                <p style={{ margin: 0, lineHeight: 1.6, fontSize: "1.05rem", whiteSpace: "pre-wrap" }}>
-                  {speechFallback?.trim() || "(текст выступления отсутствует)"}
-                </p>
+            <div
+              style={{
+                background: "#1a1a1a",
+                color: "#eee",
+                border: "1px solid #333",
+                borderRadius: 8,
+                padding: "2rem",
+                maxWidth: "100%",
+                maxHeight: "85vh",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
+              <div style={{ color: "#888", fontSize: "0.85rem", letterSpacing: "0.04em" }}>
+                ВИДЕО НЕДОСТУПНО — ТЕКСТ ВЫСТУПЛЕНИЯ
               </div>
-            )}
+              {projectName && (
+                <h2 style={{ margin: 0, fontSize: "1.3rem", color: "#fff", fontWeight: 500 }}>
+                  {projectName}
+                </h2>
+              )}
+              <p style={{ margin: 0, lineHeight: 1.6, fontSize: "1.05rem", whiteSpace: "pre-wrap" }}>
+                {speechFallback?.trim() || "(текст выступления отсутствует)"}
+              </p>
+            </div>
           </div>
 
-          {/* Right: scoreboard panel */}
           {showScoreboard && scoreboard && (
-            <Scoreboard
-              projectName={projectName}
-              data={scoreboard}
-            />
+            <Scoreboard projectName={projectName} data={scoreboard} />
           )}
         </div>
       )}

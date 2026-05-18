@@ -30,3 +30,20 @@ backend/local-cache/
 
 # Cowork session scratch
 .cowork/
+AI/
+AI.zip
+Expert Commentary/
+Voices/
+_deploy_*.zip
+_netlify_deploy.zip
+netlify_build.zip
+_preview_*.png
+_tmp_*.png
+ziR0IppF
+ziZKrN01
+frontend/vite.config.ts.timestamp-*.mjs
+*.m4a
+*.ogg
+D. DIGITAL.pdf
+D15__*.pdf
+Все_11_кейсов_заявки.pdf

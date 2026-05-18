@@ -660,6 +660,30 @@ app.post("/api/admin/nominations/:code/summary/generate", moderatorAuth, async (
 });
 
 /**
+ * PATCH /api/admin/nominations/:code/summary/speech
+ * Lets the moderator edit the speech text manually. Resets any prior render
+ * state so the new text gets re-rendered fresh.
+ */
+app.patch("/api/admin/nominations/:code/summary/speech", moderatorAuth, async (req, res) => {
+  try {
+    const code = req.params.code.toUpperCase();
+    const text = String((req.body ?? {}).speech_text ?? "").trim();
+    if (!text) return res.status(400).json({ error: "speech_text required" });
+    const row = await upsertSummary(code, {
+      speech_text: text,
+      heygen_video_id: null,
+      avatar_video_url: null,
+      avatar_status: "pending",
+      avatar_error: null,
+      speech_generated_at: new Date().toISOString(),
+    });
+    res.json({ ok: true, summary: row });
+  } catch (e) {
+    res.status(500).json({ error: "save speech failed", detail: String((e as Error).message) });
+  }
+});
+
+/**
  * POST /api/admin/nominations/:code/summary/render
  * Submits the saved speech text to HeyGen. Fire-and-forget — the poller
  * picks up the result and writes the URL back.

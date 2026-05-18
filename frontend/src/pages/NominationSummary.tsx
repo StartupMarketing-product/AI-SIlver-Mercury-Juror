@@ -33,8 +33,10 @@ export default function NominationSummary() {
   const code = (rawCode ?? "").toUpperCase();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<null | "generate" | "render">(null);
+  const [busy, setBusy] = useState<null | "generate" | "render" | "save">(null);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState("");
   const pollRef = useRef<number | null>(null);
 
   function load() {
@@ -84,6 +86,43 @@ export default function NominationSummary() {
       setSummary(body.summary);
     } catch (e) {
       setError(`Генерация не удалась: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function startEdit() {
+    setDraft(summary?.speech_text ?? "");
+    setIsEditing(true);
+    setError(null);
+  }
+
+  function cancelEdit() {
+    setIsEditing(false);
+    setDraft("");
+  }
+
+  async function saveEdit() {
+    const text = draft.trim();
+    if (!text) {
+      setError("Текст не может быть пустым.");
+      return;
+    }
+    setBusy("save");
+    setError(null);
+    try {
+      const r = await apiFetch(`${base}/api/admin/nominations/${code}/summary/speech`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ speech_text: text }),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body?.detail ?? body?.error ?? `HTTP ${r.status}`);
+      setSummary(body.summary);
+      setIsEditing(false);
+      setDraft("");
+    } catch (e) {
+      setError(`Сохранение не удалось: ${(e as Error).message}`);
     } finally {
       setBusy(null);
     }
@@ -234,8 +273,95 @@ export default function NominationSummary() {
 
           {/* Speech text */}
           <section style={{ marginBottom: 28 }}>
-            <SectionLabel>Текст выступления</SectionLabel>
-            {summary?.speech_text ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <SectionLabel>Текст выступления</SectionLabel>
+              {summary?.speech_text && !isEditing && (
+                <button
+                  onClick={startEdit}
+                  disabled={busy !== null}
+                  style={{
+                    padding: "6px 14px",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "var(--fg-primary)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: 6,
+                    fontSize: "0.82rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  Редактировать текст
+                </button>
+              )}
+            </div>
+
+            {isEditing ? (
+              <>
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  rows={18}
+                  style={{
+                    width: "100%",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid var(--border-strong)",
+                    color: "var(--fg-primary)",
+                    padding: "22px 26px",
+                    borderRadius: 10,
+                    lineHeight: 1.65,
+                    fontSize: "1.02rem",
+                    fontFamily: "inherit",
+                    resize: "vertical",
+                    boxSizing: "border-box",
+                    whiteSpace: "pre-wrap",
+                  }}
+                />
+                <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+                  <button
+                    onClick={saveEdit}
+                    disabled={busy !== null}
+                    style={{
+                      padding: "10px 20px",
+                      background: "var(--accent-cyan)",
+                      color: "var(--fg-on-light)",
+                      border: "none",
+                      borderRadius: 8,
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      cursor: busy ? "wait" : "pointer",
+                    }}
+                  >
+                    {busy === "save" ? "Сохраняем…" : "Сохранить"}
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    disabled={busy !== null}
+                    style={{
+                      padding: "10px 20px",
+                      background: "rgba(255,255,255,0.06)",
+                      color: "var(--fg-primary)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: 8,
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      cursor: busy ? "wait" : "pointer",
+                    }}
+                  >
+                    Отменить
+                  </button>
+                </div>
+                <p style={{ color: "var(--fg-tertiary)", fontSize: "0.82rem", marginTop: 10 }}>
+                  После сохранения нажмите «Сгенерировать видео», чтобы пересоздать аватара с новым текстом.
+                </p>
+              </>
+            ) : summary?.speech_text ? (
               <div
                 style={{
                   background: "rgba(255,255,255,0.04)",
@@ -255,7 +381,7 @@ export default function NominationSummary() {
                 Речь ещё не сгенерирована. Нажмите «Сгенерировать речь».
               </p>
             )}
-            {estimatedMinutes && (
+            {!isEditing && estimatedMinutes && (
               <p style={{ color: "var(--fg-tertiary)", fontSize: "0.85rem", marginTop: 10 }}>
                 {wordCount} слов · ориентировочно {estimatedMinutes} минут чтения вслух
               </p>
