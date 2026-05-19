@@ -266,28 +266,57 @@ export default function GrandModerator() {
   // and isn't already rendering / ready. The endpoint returns immediately
   // with the count; the per-row badges then update via the 5s reload poll.
   async function handleRenderAll() {
-    const eligibleCount = items?.filter(
-      (i) => i.avatar_script && i.avatar_script.trim() && i.avatar_status !== "rendering" && i.avatar_status !== "ready"
-    ).length ?? 0;
-    if (eligibleCount === 0) {
-      setRenderAllStatus("Нет кейсов для рендера (все уже в работе или готовы).");
-      return;
+    const withScript = items?.filter(
+      (i) => i.avatar_script && i.avatar_script.trim()
+    ) ?? [];
+    const fresh = withScript.filter(
+      (i) => i.avatar_status !== "rendering" && i.avatar_status !== "ready"
+    );
+    const readyCount = withScript.filter((i) => i.avatar_status === "ready").length;
+    const renderingCount = withScript.filter((i) => i.avatar_status === "rendering").length;
+
+    let force = false;
+    let countToSubmit = fresh.length;
+
+    if (countToSubmit === 0) {
+      // Nothing fresh. Offer to re-render the ready ones (force mode).
+      if (readyCount === 0) {
+        setRenderAllStatus(
+          renderingCount > 0
+            ? `Нет кейсов для рендера. В работе: ${renderingCount}.`
+            : "Нет кейсов с готовой речью."
+        );
+        return;
+      }
+      if (!window.confirm(
+        `Все ${readyCount} кейсов уже сгенерированы. Перезаписать видео заново? Это потратит кредиты HeyGen и заменит существующие записи.`
+      )) return;
+      force = true;
+      countToSubmit = readyCount;
+    } else {
+      if (!window.confirm(
+        `Запустить рендер ${countToSubmit} видео в HeyGen? Это потратит кредиты HeyGen и займёт несколько минут.`
+      )) return;
     }
-    if (!window.confirm(
-      `Запустить рендер ${eligibleCount} видео в HeyGen? Это потратит кредиты HeyGen и займёт несколько минут.`
-    )) return;
+
     setBusy("render-all");
     setError(null);
     setRenderAllStatus(null);
     try {
-      const res = await apiFetch(`${base}/api/admin/render-all`, { method: "POST" });
+      const res = await apiFetch(`${base}/api/admin/render-all`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force }),
+      });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         const parts = [body?.error, body?.detail].filter(Boolean).join(" — ");
         throw new Error(parts || `HTTP ${res.status}`);
       }
       setRenderAllStatus(
-        `Запущено ${body.queued ?? "?"} рендеров. Уже в работе или готовы: ${body.already_rendering_or_ready ?? 0}.`
+        force
+          ? `Перезапущено ${body.queued ?? "?"} рендеров.`
+          : `Запущено ${body.queued ?? "?"} рендеров. Уже в работе или готовы: ${body.already_rendering_or_ready ?? 0}.`
       );
       reload();
     } catch (e) {
@@ -434,7 +463,9 @@ export default function GrandModerator() {
                 fontWeight: 500,
               }}
             >
-              {busy === "render-all" ? "Запускаем рендер…" : "Записать выступления для всех кейсов"}
+              {busy === "render-all"
+                ? "Запускаем рендер…"
+                : "Записать (или перезаписать) выступления для всех кейсов"}
             </button>
             {renderAllStatus && (
               <div style={{ marginTop: 6, fontSize: "0.78rem", color: "var(--accent-mint)" }}>

@@ -722,17 +722,20 @@ app.post("/api/admin/nominations/:code/summary/render", moderatorAuth, async (re
   }
 });
 
-app.post("/api/admin/render-all", moderatorAuth, async (_req, res) => {
+app.post("/api/admin/render-all", moderatorAuth, async (req, res) => {
   try {
+    const force = (req.body ?? {}).force === true;
     const all = await listVerdicts({ limit: 1000 });
-    // Eligible: has a non-empty script, not already in flight or finished.
-    const eligible = all.filter(
-      (v) =>
-        v.avatar_script &&
-        v.avatar_script.trim().length > 0 &&
-        v.avatar_status !== "rendering" &&
-        v.avatar_status !== "ready"
-    );
+    // Eligible: has a non-empty script. By default we skip rows that are
+    // already in flight or finished. With { force: true } we re-render any
+    // row with a script, regardless of current status — useful when the
+    // avatar voice changes and the operator wants fresh videos.
+    const eligible = all.filter((v) => {
+      if (!v.avatar_script || v.avatar_script.trim().length === 0) return false;
+      if (v.avatar_status === "rendering") return false;
+      if (!force && v.avatar_status === "ready") return false;
+      return true;
+    });
 
     // Respond immediately — the loop runs in the background. Each HeyGen
     // submission takes ~1s, so 50 cases take ~1 minute; we don't want to
