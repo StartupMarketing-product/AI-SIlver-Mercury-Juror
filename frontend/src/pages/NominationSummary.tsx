@@ -252,7 +252,9 @@ export default function NominationSummary() {
             )}
           </section>
 
-          {/* Video, if available */}
+          {/* Video, if available. The inset box-shadow paints a black ring
+              over the white halo HeyGen leaves at the photo-avatar edges,
+              without scaling the video or affecting the playback controls. */}
           {summary?.avatar_video_url && (
             <section style={{ marginBottom: 28 }}>
               <SectionLabel>Видео</SectionLabel>
@@ -265,7 +267,9 @@ export default function NominationSummary() {
                   maxWidth: 900,
                   background: "#000",
                   borderRadius: 10,
-                  boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                  display: "block",
+                  boxShadow:
+                    "inset 0 0 0 6px #000, 0 20px 60px rgba(0,0,0,0.5)",
                 }}
               />
             </section>
