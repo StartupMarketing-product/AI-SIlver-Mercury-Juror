@@ -386,7 +386,7 @@ export default function AvatarPlayerModal({
                 background: "#000",
                 boxShadow: "0 30px 100px rgba(0,0,0,0.7)",
                 lineHeight: 0,
-                clipPath: "inset(6px 6px 6px 6px)",
+                clipPath: "inset(16px 16px 16px 16px)",
               }}
             >
               <video
@@ -411,7 +411,7 @@ export default function AvatarPlayerModal({
                   display: "block",
                   border: "none",
                   outline: "none",
-                  transform: "scale(1.04)",
+                  transform: "scale(1.08)",
                   transformOrigin: "center center",
                   pointerEvents: "none",
                 }}
