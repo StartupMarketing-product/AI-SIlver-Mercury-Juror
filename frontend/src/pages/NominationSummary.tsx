@@ -37,7 +37,9 @@ export default function NominationSummary() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [videoStarted, setVideoStarted] = useState(false);
   const pollRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   function load() {
     fetch(`${base}/api/nominations/${code}/summary`)
@@ -252,26 +254,86 @@ export default function NominationSummary() {
             )}
           </section>
 
-          {/* Video, if available. The inset box-shadow paints a black ring
-              over the white halo HeyGen leaves at the photo-avatar edges,
-              without scaling the video or affecting the playback controls. */}
+          {/* Video, if available. Presented as a clean avatar panel — no
+              native controls, no time bar. A custom circular play button
+              starts it. The clipPath + scale crop the white halo HeyGen
+              leaves on the photo-avatar edges. */}
           {summary?.avatar_video_url && (
             <section style={{ marginBottom: 28 }}>
-              <SectionLabel>Видео</SectionLabel>
-              <video
-                src={summary.avatar_video_url}
-                controls
-                playsInline
+              <SectionLabel>Выступление аватара</SectionLabel>
+              <div
+                onClick={() => {
+                  const v = videoRef.current;
+                  if (!v) return;
+                  if (v.paused) {
+                    v.play().catch(() => {});
+                    setVideoStarted(true);
+                  } else {
+                    v.pause();
+                  }
+                }}
                 style={{
+                  position: "relative",
                   width: "100%",
                   maxWidth: 900,
-                  background: "#000",
                   borderRadius: 10,
-                  display: "block",
-                  boxShadow:
-                    "inset 0 0 0 6px #000, 0 20px 60px rgba(0,0,0,0.5)",
+                  overflow: "hidden",
+                  background: "#000",
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                  cursor: "pointer",
+                  lineHeight: 0,
+                  clipPath: "inset(20px 20px 20px 20px)",
                 }}
-              />
+              >
+                <video
+                  ref={videoRef}
+                  src={summary.avatar_video_url}
+                  playsInline
+                  preload="auto"
+                  disablePictureInPicture
+                  onEnded={() => setVideoStarted(false)}
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{
+                    width: "100%",
+                    background: "#000",
+                    display: "block",
+                    transform: "scale(1.1)",
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                  }}
+                />
+                {/* Play overlay — shown before first play and after end */}
+                {!videoStarted && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(6,6,26,0.35)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 76,
+                        height: 76,
+                        borderRadius: "50%",
+                        background: "var(--accent-cyan)",
+                        color: "var(--fg-on-light)",
+                        boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
+                      }}
+                    >
+                      <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </span>
+                  </div>
+                )}
+              </div>
             </section>
           )}
 
