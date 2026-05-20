@@ -17,39 +17,49 @@ const CATEGORIES = [
  * confident headline split across rounded chips, then two ranks of cards —
  * Grand Moderator console and per-category Moderator entry points.
  */
+interface SummaryMeta {
+  url: string | null;
+  status: string | null;
+}
+
 export default function Home() {
   const [health, setHealth] = useState<{ ok?: boolean } | null>(null);
-  const [greetingUrl, setGreetingUrl] = useState<string | null>(null);
-  const [greetingStatus, setGreetingStatus] = useState<string | null>(null);
-  const [greetingOpen, setGreetingOpen] = useState(false);
+  // Video metadata for the greeting + each nomination summary, keyed by code.
+  const [summaries, setSummaries] = useState<Record<string, SummaryMeta>>({});
+  // The currently-open avatar video modal (null = closed).
+  const [modal, setModal] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     const url = API_URL ? `${API_URL.replace(/\/$/, "")}/health` : "/health";
     fetch(url).then((r) => r.json()).then(setHealth).catch(() => setHealth({ ok: false }));
   }, []);
 
-  // Fetch greeting video metadata on mount so the button knows whether the
-  // video is ready to play. Fails silently if backend is unreachable.
+  // Fetch video metadata for the greeting and all nomination summaries so the
+  // buttons know whether a video is ready to play. Fails silently offline.
   useEffect(() => {
-    fetch(`${API_BASE}/api/nominations/GREETING/summary`)
-      .then((r) => r.json())
-      .then((j) => {
-        const s = j?.summary;
-        if (s) {
-          setGreetingUrl(s.avatar_video_url ?? null);
-          setGreetingStatus(s.avatar_status ?? null);
-        }
-      })
-      .catch(() => {/* ignore */});
+    for (const code of ["GREETING", "D10", "D13", "D15"]) {
+      fetch(`${API_BASE}/api/nominations/${code}/summary`)
+        .then((r) => r.json())
+        .then((j) => {
+          const s = j?.summary;
+          setSummaries((prev) => ({
+            ...prev,
+            [code]: { url: s?.avatar_video_url ?? null, status: s?.avatar_status ?? null },
+          }));
+        })
+        .catch(() => {/* ignore */});
+    }
   }, []);
 
-  function handleGreetingClick() {
-    if (greetingUrl) {
-      setGreetingOpen(true);
-    } else if (greetingStatus === "rendering") {
+  // Open the avatar video modal for a given code, or explain why it can't.
+  function playSummary(code: string, title: string) {
+    const meta = summaries[code];
+    if (meta?.url) {
+      setModal({ url: meta.url, title });
+    } else if (meta?.status === "rendering") {
       alert("Видео ещё рендерится, попробуйте через минуту.");
     } else {
-      alert("Видео ещё не готово. Зайдите на /nomination-summary/GREETING и нажмите «Сгенерировать видео».");
+      alert("Видео ещё не готово. Его можно сгенерировать в консоли главного модератора.");
     }
   }
 
@@ -64,7 +74,7 @@ export default function Home() {
       <section style={{ marginBottom: 36 }}>
         <SectionLabel>Знакомство с аватаром</SectionLabel>
         <button
-          onClick={handleGreetingClick}
+          onClick={() => playSummary("GREETING", "Приветствие аватара")}
           className="card"
           style={{
             display: "flex",
@@ -86,9 +96,9 @@ export default function Home() {
               Приветствие аватара
             </div>
             <div style={{ color: "var(--fg-secondary)", fontSize: "0.92rem" }}>
-              {greetingUrl
+              {summaries["GREETING"]?.url
                 ? "20-секундное видео — кто такой аватар и что он умеет"
-                : greetingStatus === "rendering"
+                : summaries["GREETING"]?.status === "rendering"
                 ? "Видео рендерится…"
                 : "Видео ещё не готово"}
             </div>
@@ -181,9 +191,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Сводное выступление — D10, D13, D15. One card per nomination. Each
-          links to /nomination-summary/<code> where the speech is generated
-          and the avatar video is rendered. */}
+      {/* Сводное выступление — D10, D13, D15. Clicking a card plays the avatar
+          video right away in a modal. Editing the speech and re-rendering the
+          video is done in the Grand Moderator console. */}
       <section style={{ marginBottom: 36 }}>
         <SectionLabel>Сводное выступление по номинации</SectionLabel>
         <div
@@ -198,9 +208,9 @@ export default function Home() {
             { code: "D13", name: "Лучшее использование данных", accent: "var(--accent-magenta)", rgba: "230,97,217" },
             { code: "D15", name: "Лучшая цифровая платформа", accent: "var(--accent-mint)", rgba: "94,222,184" },
           ].map((c) => (
-            <Link
+            <button
               key={c.code}
-              to={`/nomination-summary/${c.code}`}
+              onClick={() => playSummary(c.code, `Сводное выступление · ${c.code}`)}
               className="card"
               style={{
                 display: "flex",
@@ -210,6 +220,10 @@ export default function Home() {
                 padding: "20px 22px",
                 background: `linear-gradient(135deg, rgba(${c.rgba},0.18), rgba(63,174,255,0.08) 60%, transparent)`,
                 border: "1px solid var(--border-strong)",
+                cursor: "pointer",
+                width: "100%",
+                textAlign: "left",
+                font: "inherit",
               }}
             >
               <div>
@@ -228,7 +242,7 @@ export default function Home() {
                 </span>
               </div>
               <ArrowCircle />
-            </Link>
+            </button>
           ))}
         </div>
       </section>
@@ -238,10 +252,10 @@ export default function Home() {
       </p>
 
       <AvatarPlayerModal
-        open={greetingOpen}
-        videoUrl={greetingUrl}
-        projectName="Приветствие аватара"
-        onClose={() => setGreetingOpen(false)}
+        open={modal !== null}
+        videoUrl={modal?.url ?? null}
+        projectName={modal?.title}
+        onClose={() => setModal(null)}
       />
     </div>
   );
