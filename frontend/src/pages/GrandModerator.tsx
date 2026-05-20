@@ -102,10 +102,18 @@ export default function GrandModerator() {
   const [items, setItems] = useState<CaseRow[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ id: string; speech: string } | null>(null);
-  const [busy, setBusy] = useState<null | "upload" | "save" | "approve" | "render-all">(null);
+  const [busy, setBusy] = useState<null | "upload" | "save" | "approve" | "render-all" | "greeting-save" | "greeting-render">(null);
   const [renderAllStatus, setRenderAllStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  // Greeting (avatar presentation video on the home page). Stored as the
+  // GREETING row in nomination_summaries. Editable inline from this console.
+  const [greetingText, setGreetingText] = useState<string>("");
+  const [greetingStatus, setGreetingStatus] = useState<string | null>(null);
+  const [greetingVideoUrl, setGreetingVideoUrl] = useState<string | null>(null);
+  const [greetingMsg, setGreetingMsg] = useState<string | null>(null);
+  const [greetingLoaded, setGreetingLoaded] = useState<boolean>(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   // Tracks how many cases the most recent import dispatched for scoring.
@@ -146,6 +154,89 @@ export default function GrandModerator() {
       .then((d) => setRichVerdict(d ?? null))
       .catch(() => setRichVerdict(null));
   }, [base, selectedId]);
+
+  // Load the greeting (GREETING row in nomination_summaries) on mount. This
+  // is the 20-second avatar presentation video shown on the home page.
+  useEffect(() => {
+    fetch(`${base}/api/nominations/GREETING/summary`)
+      .then((r) => r.json())
+      .then((j) => {
+        const s = j?.summary;
+        if (s) {
+          setGreetingText(s.speech_text ?? "");
+          setGreetingStatus(s.avatar_status ?? null);
+          setGreetingVideoUrl(s.avatar_video_url ?? null);
+        }
+        setGreetingLoaded(true);
+      })
+      .catch(() => setGreetingLoaded(true));
+  }, [base]);
+
+  async function handleGreetingSave() {
+    const text = greetingText.trim();
+    if (!text) {
+      setGreetingMsg("Текст не может быть пустым.");
+      return;
+    }
+    setBusy("greeting-save");
+    setGreetingMsg(null);
+    try {
+      const r = await apiFetch(`${base}/api/admin/nominations/GREETING/summary/speech`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ speech_text: text }),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body?.detail ?? body?.error ?? `HTTP ${r.status}`);
+      setGreetingStatus(body.summary?.avatar_status ?? "pending");
+      setGreetingVideoUrl(body.summary?.avatar_video_url ?? null);
+      setGreetingMsg("Текст сохранён. Нажмите «Сгенерировать видео» для перерендера.");
+    } catch (e) {
+      setGreetingMsg(`Сохранение не удалось: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleGreetingRender() {
+    if (greetingStatus === "ready" && !window.confirm(
+      "Видео уже сгенерировано. Запустить рендер заново? Это потратит кредиты HeyGen и заменит текущее видео."
+    )) return;
+    setBusy("greeting-render");
+    setGreetingMsg(null);
+    try {
+      const r = await apiFetch(`${base}/api/admin/nominations/GREETING/summary/render`, {
+        method: "POST",
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body?.detail ?? body?.error ?? `HTTP ${r.status}`);
+      setGreetingStatus("rendering");
+      setGreetingMsg("Видео рендерится в HeyGen. Опрос статуса каждые 8 секунд…");
+    } catch (e) {
+      setGreetingMsg(`Рендер не удалось запустить: ${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // Auto-poll greeting status while rendering
+  useEffect(() => {
+    if (greetingStatus !== "rendering") return;
+    const id = window.setInterval(() => {
+      fetch(`${base}/api/nominations/GREETING/summary`)
+        .then((r) => r.json())
+        .then((j) => {
+          const s = j?.summary;
+          if (!s) return;
+          setGreetingStatus(s.avatar_status);
+          setGreetingVideoUrl(s.avatar_video_url ?? null);
+          if (s.avatar_status === "ready") setGreetingMsg("Видео готово.");
+          else if (s.avatar_status === "failed") setGreetingMsg(`Ошибка: ${s.avatar_error ?? "render failed"}`);
+        })
+        .catch(() => {});
+    }, 8000);
+    return () => window.clearInterval(id);
+  }, [base, greetingStatus]);
 
   // Detect inconsistency between the speech text's mentioned band and the
   // post-cap final award. Example: speech opens with "Серебро" but caps_applied
@@ -372,6 +463,95 @@ export default function GrandModerator() {
           </div>
           {uploadStatus && (
             <div style={{ marginTop: 8, fontSize: "0.8rem", color: "#2f855a" }}>{uploadStatus}</div>
+          )}
+        </section>
+
+        {/* Avatar greeting (Presentation) — text editor + render trigger. The
+            video plays on the home page «Приветствие аватара» button. */}
+        <section style={{ marginBottom: 18, padding: 12, border: "1px dashed var(--border-strong)", borderRadius: 6 }}>
+          <div style={{ fontSize: "0.85rem", marginBottom: 8, color: "var(--fg-secondary)" }}>
+            Приветствие аватара
+          </div>
+          {!greetingLoaded ? (
+            <div style={{ fontSize: "0.8rem", color: "var(--fg-tertiary)" }}>Загрузка…</div>
+          ) : (
+            <>
+              <textarea
+                value={greetingText}
+                onChange={(e) => setGreetingText(e.target.value)}
+                rows={6}
+                disabled={busy !== null}
+                style={{
+                  width: "100%",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid var(--border-subtle)",
+                  color: "var(--fg-primary)",
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  fontSize: "0.82rem",
+                  fontFamily: "inherit",
+                  lineHeight: 1.5,
+                  resize: "vertical",
+                  boxSizing: "border-box",
+                }}
+              />
+              <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                <button
+                  onClick={handleGreetingSave}
+                  disabled={busy !== null}
+                  style={{
+                    flex: "1 1 auto",
+                    padding: "8px 10px",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "var(--fg-primary)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: 6,
+                    fontSize: "0.8rem",
+                    cursor: busy ? "wait" : "pointer",
+                  }}
+                >
+                  {busy === "greeting-save" ? "Сохраняем…" : "Сохранить текст"}
+                </button>
+                <button
+                  onClick={handleGreetingRender}
+                  disabled={busy !== null || greetingStatus === "rendering" || !greetingText.trim()}
+                  style={{
+                    flex: "1 1 auto",
+                    padding: "8px 10px",
+                    background: "var(--accent-cyan)",
+                    color: "var(--fg-on-light)",
+                    border: "none",
+                    borderRadius: 6,
+                    fontSize: "0.8rem",
+                    fontWeight: 500,
+                    cursor: busy || greetingStatus === "rendering" || !greetingText.trim() ? "default" : "pointer",
+                    opacity: busy || greetingStatus === "rendering" || !greetingText.trim() ? 0.55 : 1,
+                  }}
+                >
+                  {busy === "greeting-render"
+                    ? "Отправляем…"
+                    : greetingStatus === "rendering"
+                    ? "Рендерится…"
+                    : greetingStatus === "ready"
+                    ? "Сгенерировать заново"
+                    : "Сгенерировать видео"}
+                </button>
+              </div>
+              <div style={{ marginTop: 6, fontSize: "0.75rem", color: "var(--fg-tertiary)" }}>
+                Статус: {greetingStatus === "ready" ? "готово" : greetingStatus === "rendering" ? "рендерится" : greetingStatus === "failed" ? "ошибка" : "—"}
+                {greetingVideoUrl && greetingStatus === "ready" && (
+                  <>
+                    {" · "}
+                    <a href={greetingVideoUrl} target="_blank" rel="noreferrer" style={{ color: "var(--accent-cyan)" }}>
+                      открыть видео
+                    </a>
+                  </>
+                )}
+              </div>
+              {greetingMsg && (
+                <div style={{ marginTop: 6, fontSize: "0.78rem", color: "var(--accent-mint)" }}>{greetingMsg}</div>
+              )}
+            </>
           )}
         </section>
 
