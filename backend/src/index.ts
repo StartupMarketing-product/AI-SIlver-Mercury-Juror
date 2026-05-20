@@ -55,6 +55,27 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "synthetic-jury-api" });
 });
 
+/**
+ * Keep-alive endpoint. Designed to be hit every 5 minutes by an external
+ * uptime monitor (UptimeRobot, cron-job.org, etc.) to prevent Render from
+ * spinning the service down. Unlike /health, this also pings Supabase so the
+ * full stack is exercised — if the DB is unreachable the response is 503,
+ * which surfaces in the uptime monitor's alert.
+ */
+app.get("/keepalive", async (_req, res) => {
+  try {
+    const sb = (await import("./supabase.js")).getSupabase();
+    const { error } = await sb
+      .from("nomination_summaries")
+      .select("nomination_code", { count: "exact", head: true })
+      .limit(1);
+    if (error) throw new Error(error.message);
+    res.json({ ok: true, service: "synthetic-jury-api", db: "ok", ts: new Date().toISOString() });
+  } catch (e) {
+    res.status(503).json({ ok: false, db: "error", detail: String((e as Error).message) });
+  }
+});
+
 /** Methodology config (versioned). */
 app.get("/api/config/methodology", (_req, res) => {
   try {
