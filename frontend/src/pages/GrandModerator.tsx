@@ -381,6 +381,7 @@ export default function GrandModerator() {
             triggers. The greeting plays on the home page «Приветствие
             аватара» button; each nomination summary plays on its card. */}
         <SummaryEditor code="GREETING" label="Приветствие аватара" />
+        <SummaryEditor code="CEREMONY" label="Выступление на церемонии" />
         <SummaryEditor code="D10" label="Сводное выступление · D10" allowGenerate />
         <SummaryEditor code="D13" label="Сводное выступление · D13" allowGenerate />
         <SummaryEditor code="D15" label="Сводное выступление · D15" allowGenerate />

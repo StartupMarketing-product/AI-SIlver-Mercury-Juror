@@ -37,7 +37,7 @@ export default function Home() {
   // Fetch video metadata for the greeting and all nomination summaries so the
   // buttons know whether a video is ready to play. Fails silently offline.
   useEffect(() => {
-    for (const code of ["GREETING", "D10", "D13", "D15"]) {
+    for (const code of ["GREETING", "CEREMONY", "D10", "D13", "D15"]) {
       fetch(`${API_BASE}/api/nominations/${code}/summary`)
         .then((r) => r.json())
         .then((j) => {
@@ -99,6 +99,43 @@ export default function Home() {
               {summaries["GREETING"]?.url
                 ? "20-секундное видео — кто такой аватар и что он умеет"
                 : summaries["GREETING"]?.status === "rendering"
+                ? "Видео рендерится…"
+                : "Видео ещё не готово"}
+            </div>
+          </div>
+          <ArrowCircle />
+        </button>
+      </section>
+
+      {/* Выступление на церемонии — single user-authored speech, plays the rendered avatar video */}
+      <section style={{ marginBottom: 36 }}>
+        <SectionLabel>Выступление на церемонии</SectionLabel>
+        <button
+          onClick={() => playSummary("CEREMONY", "Выступление на церемонии")}
+          className="card"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            color: "var(--fg-primary)",
+            padding: "24px 28px",
+            background:
+              "linear-gradient(135deg, rgba(240,193,75,0.20), rgba(230,97,217,0.10) 60%, transparent)",
+            border: "1px solid var(--border-strong)",
+            cursor: "pointer",
+            width: "100%",
+            textAlign: "left",
+            font: "inherit",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: 4 }}>
+              Выступление на церемонии
+            </div>
+            <div style={{ color: "var(--fg-secondary)", fontSize: "0.92rem" }}>
+              {summaries["CEREMONY"]?.url
+                ? "Видео аватара с текстом, подготовленным главным модератором"
+                : summaries["CEREMONY"]?.status === "rendering"
                 ? "Видео рендерится…"
                 : "Видео ещё не готово"}
             </div>
