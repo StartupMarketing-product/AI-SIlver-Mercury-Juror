@@ -283,6 +283,34 @@ export default function AvatarPlayerModal({
         Закрыть · Esc
       </button>
 
+      {/* Download MP4 — only when there's a video URL. Opens the source MP4
+          straight from CDN in a new tab; the `download` attr triggers a save
+          dialog in same-origin cases, fall back to manual save otherwise. */}
+      {videoUrl && (
+        <a
+          href={videoUrl}
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 130,
+            background: "transparent",
+            color: "#ccc",
+            border: "1px solid #555",
+            borderRadius: 4,
+            padding: "4px 12px",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            zIndex: 10,
+            textDecoration: "none",
+          }}
+        >
+          ↓ Скачать MP4
+        </a>
+      )}
+
       {/* Stage: cinematic intro — two title beats with audio sting. */}
       {(stage === "intro-1" || stage === "intro-2") && (
         <IntroStage stage={stage} />
