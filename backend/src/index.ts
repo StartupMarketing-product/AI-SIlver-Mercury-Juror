@@ -825,8 +825,9 @@ async function pollHeyGenOnce(): Promise<void> {
     console.warn(`[heygen-poll] listRenderingVerdicts failed: ${(e as Error).message}`);
     return;
   }
-  if (rendering.length === 0) return;
-  console.log(`[heygen-poll] checking ${rendering.length} rendering verdict(s)`);
+  if (rendering.length > 0) {
+    console.log(`[heygen-poll] checking ${rendering.length} rendering verdict(s)`);
+  }
   for (const v of rendering) {
     if (!v.avatar_video_id) continue;
     try {
